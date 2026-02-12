@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جمعية حقنا - نموذج بيانات</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #151c2c;
+            --bg-card-hover: #1a2236;
+            --bg-input: #0d1320;
+            --bg-input-focus: #111a2e;
+            --border: #1e2a42;
+            --border-hover: #2d3f65;
+            --border-focus: #06b6d4;
+            --accent: #06b6d4;
+            --accent-glow: rgba(6, 182, 212, 0.15);
+            --accent2: #8b5cf6;
+            --accent2-glow: rgba(139, 92, 246, 0.15);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.15);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.15);
+            --text: #e2e8f0;
+            --text-dim: #64748b;
+            --text-label: #94a3b8;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text);
+            background-image:
+                radial-gradient(ellipse at 20% 0%, rgba(6,182,212,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(139,92,246,0.06) 0%, transparent 60%);
+        }
+
+        /* ═══════════ PARTICLES BG ═══════════ */
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-effects .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-effects .orb:nth-child(1) {
+            width: 400px; height: 400px;
+            background: rgba(6,182,212,0.08);
+            top: -100px; right: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-effects .orb:nth-child(2) {
+            width: 350px; height: 350px;
+            background: rgba(139,92,246,0.08);
+            bottom: -80px; left: -80px;
+            animation-delay: -7s;
+        }
+
+        .bg-effects .orb:nth-child(3) {
+            width: 250px; height: 250px;
+            background: rgba(16,185,129,0.06);
+            top: 50%; left: 50%;
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* ═══════════ HEADER ═══════════ */
+        .main-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 16px 30px;
+        }
+
+        .logo-box {
+            width: 65px;
+            height: 65px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--border);
+            overflow: hidden;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.4s;
+        }
+
+        .logo-box:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 25px var(--accent-glow);
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .logo-box .placeholder {
+            color: var(--text-dim);
+            font-size: 0.65em;
+            text-align: center;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        .logo-box input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .header-text h1 {
+            font-size: 1.9em;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+
+        .header-text h1 .t1 {
+            color: var(--text);
+        }
+
+        .header-text h1 .t2 {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-text p {
+            color: var(--text-dim);
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+
+        .header-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent);
+        }
+
+        /* ═══════════ WRAPPER ═══════════ */
+        .wrapper {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px 50px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ═══════════ SECTION ═══════════ */
+        .section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            margin-bottom: 22px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(6,182,212,0.02), transparent, rgba(139,92,246,0.02));
+            pointer-events: none;
+        }
+
+        .section:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+        }
+
+        .sec-head {
+            padding: 20px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.01);
+        }
+
+        .sec-num {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.85em;
+            color: #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .sec-head h3 {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .sec-body {
+            padding: 28px;
+            position: relative;
+        }
+
+        /* ═══════════ GRID ═══════════ */
+        .g { display: grid; gap: 18px; }
+        .g2 { grid-template-columns: 1fr 1fr; }
+        .g3 { grid-template-columns: 1fr 1fr 1fr; }
+        .spanall { grid-column: 1 / -1; }
+
+        /* ═══════════ FORM GROUP ═══════════ */
+        .fg { display: flex; flex-direction: column; gap: 7px; }
+
+        .fg > label {
+            font-size: 0.88em;
+            font-weight: 600;
+            color: var(--text-label);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rq { color: var(--red); font-size: 1.1em; }
+
+        .fg input, .fg select, .fg textarea {
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.95em;
+            font-weight: 500;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .fg input:focus, .fg select:focus, .fg textarea:focus {
+            border-color: var(--accent);
+            background: var(--bg-input-focus);
+            box-shadow: 0 0 0 4px var(--accent-glow), 0 0 20px var(--accent-glow);
+        }
+
+        .fg input::placeholder, .fg textarea::placeholder {
+            color: var(--text-dim);
+            font-weight: 400;
+        }
+
+        .fg select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%2306b6d4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 14px center;
+            padding-left: 34px;
+        }
+
+        .fg select option {
+            background: var(--bg-secondary);
+            color: var(--text);
+        }
+
+        .fg textarea { resize: vertical; min-height: 85px; }
+
+        /* ═══════════ DATE SELECTS ═══════════ */
+        .dg { display: flex; flex-direction: column; gap: 7px; }
+
+        .dg > label {
+            font-size: 0.88em;
+            font-weight: 600;
+            color: var(--text-label);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ds {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr 1fr;
+            gap: 8px;
+        }
+
+        .ds select {
+            padding: 12px 6px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.88em;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            text-align: center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 12 12'%3E%3Cpath fill='%2306b6d4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: left 8px center;
+            padding-left: 18px;
+            transition: all 0.3s;
+        }
+
+        .ds select:focus {
+            border-color: var(--accent);
+            background-color: var(--bg-input-focus);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .ds select option {
+            background: var(--bg-secondary);
+            color: var(--text);
+        }
+
+        /* ═══════════ PILLS ═══════════ */
+        .pills { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 5px; }
+
+        .pill { position: relative; }
+        .pill input { display: none; }
+
+        .pill label {
+            padding: 11px 24px;
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 700;
+            font-size: 0.9em;
+            color: var(--text-dim);
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .pill label:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+            background: var(--bg-card-hover);
+        }
+
+        .pill input:checked + label {
+            background: var(--accent-glow);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow), inset 0 0 20px rgba(6,182,212,0.05);
+        }
+
+        .pill.p-red input:checked + label {
+            background: var(--red-glow);
+            border-color: var(--red);
+            color: var(--red);
+            box-shadow: 0 0 20px var(--red-glow);
+        }
+
+        .pill.p-green input:checked + label {
+            background: var(--green-glow);
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 20px var(--green-glow);
+        }
+
+        .pill.p-amber input:checked + label {
+            background: var(--amber-glow);
+            border-color: var(--amber);
+            color: var(--amber);
+            box-shadow: 0 0 20px var(--amber-glow);
+        }
+
+        .pill.p-purple input:checked + label {
+            background: var(--accent2-glow);
+            border-color: var(--accent2);
+            color: var(--accent2);
+            box-shadow: 0 0 20px var(--accent2-glow);
+        }
+
+        /* ═══════════ CONDITIONAL ═══════════ */
+        .cond {
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .cond.show { display: block; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .branch {
+            border-right: 3px solid var(--accent);
+            padding-right: 20px;
+            margin-right: 8px;
+            margin-top: 20px;
+        }
+
+        .branch-red { border-right-color: var(--red); }
+        .branch-amber { border-right-color: var(--amber); }
+        .branch-green { border-right-color: var(--green); }
+        .branch-purple { border-right-color: var(--accent2); }
+
+        /* ═══════════ CHILD CARD ═══════════ */
+        .child-card {
+            background: rgba(6,182,212,0.03);
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 14px;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: border-color 0.3s;
+        }
+
+        .child-card:hover { border-color: var(--border-hover); }
+
+        .child-head {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .child-head h4 {
+            color: var(--accent);
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .child-head h4 .cn {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 800;
+        }
+
+        /* ═══════════ FILE UPLOAD ═══════════ */
+        .fbox { position: relative; overflow: hidden; }
+
+        .fbox input[type="file"] {
+            position: absolute; inset: 0; opacity: 0; cursor: pointer;
+        }
+
+        .flbl {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            background: var(--bg-input);
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .flbl:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(6,182,212,0.05);
+        }
+
+        .flbl.done {
+            border-color: var(--green);
+            border-style: solid;
+            color: var(--green);
+            background: var(--green-glow);
+        }
+
+        /* ═══════════ TAGS ═══════════ */
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+        .tag {
+            background: var(--red-glow);
+            color: #fca5a5;
+            padding: 7px 15px;
+            border-radius: 25px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+
+        .tag .x {
+            cursor: pointer;
+            font-weight: 900;
+            color: var(--red);
+            width: 19px;
+            height: 19px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(239,68,68,0.15);
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+
+        .tag .x:hover { background: rgba(239,68,68,0.35); }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .add-row input { flex: 1; }
+
+        .add-btn {
+            padding: 11px 20px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        /* ═══════════ DIVIDER ═══════════ */
+        .divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 22px 0;
+        }
+
+        /* ═══════════ HEALTH DETAIL ═══════════ */
+        .hdet { display: none; margin-top: 10px; }
+        .hdet.show { display: block; animation: slideUp 0.3s ease; }
+
+        /* ═══════════ BUTTONS ═══════════ */
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 28px;
+        }
+
+        .btn {
+            padding: 15px 45px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Tajawal', sans-serif;
+            font-weight: 800;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: all 0.4s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-main {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+            box-shadow: 0 6px 25px var(--accent-glow);
+        }
+
+        .btn-main::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .btn-main:hover::after { transform: translateX(100%); }
+
+        .btn-main:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--accent-glow), 0 0 30px var(--accent2-glow);
+        }
+
+        .btn-ghost {
+            background: var(--bg-card);
+            color: var(--text-dim);
+            border: 2px solid var(--border);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--border-hover);
+            color: var(--text);
+            background: var(--bg-card-hover);
+        }
+
+        /* ═══════════ FOOTER ═══════════ */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--text-dim);
+            font-size: 0.85em;
+        }
+
+        .footer span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        /* ═══════════ RESPONSIVE ═══════════ */
+        @media (max-width: 768px) {
+            .g2, .g3 { grid-template-columns: 1fr; }
+            .ds { grid-template-columns: 1fr 1fr 1fr; }
+            .header-inner { padding: 12px 16px; gap: 14px; }
+            .header-text h1 { font-size: 1.4em; }
+            .logo-box { width: 50px; height: 50px; border-radius: 12px; }
+            .sec-body { padding: 20px; }
+            .pills { flex-direction: column; }
+            .pill label { width: 100%; justify-content: center; }
+            .actions { flex-direction: column; }
+            .btn { justify-content: center; }
+        }
+
+        /* ═══════════ SCROLLBAR ═══════════ */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+
+        /* ═══════════ GLOW CARD EFFECT ═══════════ */
+        .section.glow-cyan:hover {
+            box-shadow: 0 0 40px var(--accent-glow), 0 8px 40px rgba(0,0,0,0.3);
+        }
+
+        .section.glow-purple:hover {
+            box-shadow: 0 0 40px var(--accent2-glow), 0 8px 40px rgba(0,0,0,0.3);
+        }
+
+        .section.glow-green:hover {
+            box-shadow: 0 0 40px var(--green-glow), 0 8px 40px rgba(0,0,0,0.3);
+        }
+
+        @media print {
+            .main-header { position: static; }
+            .section { break-inside: avoid; box-shadow: none !important; }
+            .btn, .actions, .bg-effects { display: none !important; }
+            body { background: #fff; color: #000; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- BG EFFECTS -->
+<div class="bg-effects">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+</div>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header class="main-header">
+    <div class="header-inner">
+        <div class="logo-box" title="اضغط لإضافة الشعار">
+            <img id="logoImg" src="" alt="Logo">
+            <span class="placeholder" id="logoPH">شعار<br>الجمعية</span>
+            <input type="file" accept="image/*" onchange="loadLogo(this)">
+        </div>
+        <div class="header-text">
+            <h1><span class="t1">جمعية </span><span class="t2">حقنا</span></h1>
+            <p>نموذج تسجيل بيانات المعتقلين والمغيبين قسرياً</p>
+        </div>
+    </div>
+    <div class="header-line"></div>
+</header>
+
+<div class="wrapper">
+<form id="mainForm" autocomplete="off">
+
+<!-- ═══════════ 1 - الشخصية ═══════════ -->
+<div class="section glow-cyan">
+    <div class="sec-head">
+        <span class="sec-num">1</span>
+        <h3>المعلومات الشخصية الأساسية</h3>
+    </div>
+    <div class="sec-body">
+        <div class="g g3">
+            <div class="fg"><label><span class="rq">*</span> الاسم</label><input type="text" name="firstName" placeholder="الاسم الأول" required></div>
+            <div class="fg"><label><span class="rq">*</span> اسم الأب</label><input type="text" name="fatherName" placeholder="اسم الأب" required></div>
+            <div class="fg"><label><span class="rq">*</span> الكنية</label><input type="text" name="lastName" placeholder="اللقب" required></div>
+        </div>
+
+        <div class="g g3" style="margin-top:18px;">
+            <div class="fg">
+                <label><span class="rq">*</span> الجنس</label>
+                <select name="gender" required>
+                    <option value="">-- اختر --</option>
+                    <option value="male">ذكر</option>
+                    <option value="female">أنثى</option>
+                </select>
+            </div>
+            <div class="fg"><label><span class="rq">*</span> اسم الأم</label><input type="text" name="motherName" placeholder="اسم الأم" required></div>
+            <div class="dg">
+                <label><span class="rq">*</span> تاريخ الميلاد</label>
+                <div class="ds">
+                    <select name="birthDay" required><option value="">اليوم</option></select>
+                    <select name="birthMonth" required><option value="">الشهر</option></select>
+                    <select name="birthYear" required><option value="">السنة</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="g g3" style="margin-top:18px;">
+            <div class="fg">
+                <label><span class="rq">*</span> المحافظة</label>
+                <select name="province" required>
+                    <option value="">-- اختر --</option>
+                    <option>بغداد</option><option>البصرة</option><option>نينوى</option><option>أربيل</option>
+                    <option>السليمانية</option><option>دهوك</option><option>كركوك</option><option>ديالى</option>
+                    <option>الأنبار</option><option>بابل</option><option>كربلاء</option><option>النجف</option>
+                    <option>واسط</option><option>صلاح الدين</option><option>ميسان</option><option>ذي قار</option>
+                    <option>المثنى</option><option>القادسية</option><option>حلبجة</option><option>أخرى</option>
+                </select>
+            </div>
+            <div class="fg"><label><span class="rq">*</span> الرقم الوطني</label><input type="text" name="nationalId" placeholder="الرقم الوطني" required></div>
+            <div class="fg"><label>رقم التواصل</label><input type="tel" name="phone" placeholder="07XXXXXXXXX"></div>
+        </div>
+
+        <div class="g g3" style="margin-top:18px;">
+            <div class="fg">
+                <label><span class="rq">*</span> زمرة الدم</label>
+                <select name="bloodType" required>
+                    <option value="">-- اختر --</option>
+                    <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                    <option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+                    <option value="unknown">غير معروف</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>صورة شخصية</label>
+                <div class="fbox">
+                    <div class="flbl" id="fl_photo">📷 اختر صورة</div>
+                    <input type="file" accept="image/*" onchange="markFile(this,'fl_photo')">
+                </div>
+            </div>
+            <div class="fg">
+                <label>وثيقة إثبات</label>
+                <div class="fbox">
+                    <div class="flbl" id="fl_doc">📄 ارفق وثيقة</div>
+                    <input type="file" accept="image/*,.pdf" onchange="markFile(this,'fl_doc')">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 2 - الاعتقال ═══════════ -->
+<div class="section glow-purple">
+    <div class="sec-head">
+        <span class="sec-num">2</span>
+        <h3>معلومات الاعتقال</h3>
+    </div>
+    <div class="sec-body">
+        <div class="g g2">
+            <div class="dg">
+                <label><span class="rq">*</span> تاريخ الاعتقال</label>
+                <div class="ds">
+                    <select name="arrestDay" required><option value="">اليوم</option></select>
+                    <select name="arrestMonth" required><option value="">الشهر</option></select>
+                    <select name="arrestYear" required><option value="">السنة</option></select>
+                </div>
+            </div>
+            <div class="fg"><label><span class="rq">*</span> مكان الاعتقال</label><input type="text" name="arrestPlace" placeholder="المكان بالتفصيل" required></div>
+        </div>
+
+        <div class="g g2" style="margin-top:18px;">
+            <div class="fg"><label><span class="rq">*</span> الجهة المسؤولة</label><input type="text" name="arrestAuthority" placeholder="اسم الجهة" required></div>
+            <div class="fg"><label><span class="rq">*</span> سبب الاعتقال</label><input type="text" name="arrestReason" placeholder="السبب" required></div>
+        </div>
+
+        <div class="g g2" style="margin-top:18px;">
+            <div class="fg"><label>المُسبِّب</label><input type="text" name="arrestCauser" placeholder="إن وُجد"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="fg">
+            <label><span class="rq">*</span> الحالة الحالية</label>
+            <div class="pills">
+                <div class="pill p-amber">
+                    <input type="radio" name="status" id="st_enforced" value="enforced" onchange="toggleStatus()">
+                    <label for="st_enforced">🔒 مغيّب قسري</label>
+                </div>
+                <div class="pill p-green">
+                    <input type="radio" name="status" id="st_survivor" value="survivor" onchange="toggleStatus()">
+                    <label for="st_survivor">🕊️ ناجي</label>
+                </div>
+                <div class="pill p-red">
+                    <input type="radio" name="status" id="st_dead" value="deceased" onchange="toggleStatus()">
+                    <label for="st_dead">⚫ متوفى</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ← ناجي -->
+        <div class="cond branch branch-green" id="sec_survivor">
+            <div class="g g2">
+                <div class="dg">
+                    <label><span class="rq">*</span> تاريخ الخروج</label>
+                    <div class="ds">
+                        <select name="releaseDay"><option value="">اليوم</option></select>
+                        <select name="releaseMonth"><option value="">الشهر</option></select>
+                        <select name="releaseYear"><option value="">السنة</option></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ← متوفى (فقط تاريخ الوفاة - بدون تاريخ خروج) -->
+        <div class="cond branch branch-red" id="sec_dead">
+            <div class="g g2">
+                <div class="dg">
+                    <label><span class="rq">*</span> تاريخ الوفاة</label>
+                    <div class="ds">
+                        <select name="deathDay"><option value="">اليوم</option></select>
+                        <select name="deathMonth"><option value="">الشهر</option></select>
+                        <select name="deathYear"><option value="">السنة</option></select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════ 3 - الاجتماعية ═══════════ -->
+<div class="section glow-cyan">
+    <div class="sec-head">
+        <span class="sec-num">3</span>
+        <h3>الحالة الاجتماعية</h3>
+    </div>
+    <div class="sec-body">
+
+        <div class="fg">
+            <label><span class="rq">*</span> الحالة الاجتماعية</label>
+            <div class="pills">
+                <div class="pill"><input type="radio" name="marital" id="m_single" value="single" onchange="toggleMarital()"><label for="m_single">أعزب/عزباء</label></div>
+                <div class="pill"><input type="radio" name="marital" id="m_married" value="married" onchange="toggleMarital()"><label for="m_married">متزوج/ة</label></div>
+                <div class="pill"><input type="radio" name="marital" id="m_widowed" value="widowed" onchange="toggleMarital()"><label for="m_widowed">أرمل/ة</label></div>
+                <div class="pill"><input type="radio" name="marital" id="m_divorced" value="divorced" onchange="toggleMarital()"><label for="m_divorced">مطلق/ة</label></div>
+            </div>
+        </div>
+
+        <!-- أعزب -->
+        <div class="cond branch" id="sec_single">
+            <div class="g g3">
+                <div class="fg"><label>اسم ولي الأمر</label><input type="text" name="guardianName" placeholder="الاسم"></div>
+                <div class="fg">
+                    <label>صلة القرابة</label>
+                    <select name="guardianRelation">
+                        <option value="">-- اختر --</option>
+                        <option>أب</option><option>أم</option><option>أخ</option><option>أخت</option>
+                        <option>عم / خال</option><option>عمة / خالة</option><option>أخرى</option>
+                    </select>
+                </div>
+                <div class="fg"><label>رقم التواصل</label><input type="tel" name="guardianPhone" placeholder="07XXXXXXXXX"></div>
+            </div>
+        </div>
+
+        <!-- متزوج -->
+        <div class="cond branch" id="sec_married">
+            <div class="g g2">
+                <div class="fg"><label>اسم الزوج/ة</label><input type="text" name="spouseName" placeholder="الاسم الكامل"></div>
+                <div class="fg"><label>رقم تواصل الزوج/ة</label><input type="tel" name="spousePhone" placeholder="07XXXXXXXXX"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="fg">
+                <label>هل لديه أولاد؟</label>
+                <div class="pills">
+                    <div class="pill"><input type="radio" name="hasKids" id="hk_y" value="yes" onchange="toggleKids()"><label for="hk_y">نعم</label></div>
+                    <div class="pill"><input type="radio" name="hasKids" id="hk_n" value="no" onchange="toggleKids()"><label for="hk_n">لا</label></div>
+                </div>
+            </div>
+            <div class="cond branch branch-purple" id="sec_kids">
+                <div class="g g2" style="margin-bottom:15px;">
+                    <div class="fg"><label>عدد الأولاد</label><input type="number" id="kidsCount" min="1" max="20" placeholder="العدد" onchange="buildKids('kidsBox',this.value)"></div>
+                </div>
+                <div id="kidsBox"></div>
+            </div>
+        </div>
+
+        <!-- أرمل / مطلق -->
+        <div class="cond branch" id="sec_widowed">
+            <div class="g g2">
+                <div class="fg"><label>اسم الزوج/ة (السابق/ة)</label><input type="text" name="exSpouseName" placeholder="الاسم الكامل"></div>
+            </div>
+            <div class="divider"></div>
+            <div class="fg">
+                <label>هل لديه أولاد؟</label>
+                <div class="pills">
+                    <div class="pill"><input type="radio" name="hasKidsW" id="hkw_y" value="yes" onchange="toggleKidsW()"><label for="hkw_y">نعم</label></div>
+                    <div class="pill"><input type="radio" name="hasKidsW" id="hkw_n" value="no" onchange="toggleKidsW()"><label for="hkw_n">لا</label></div>
+                </div>
+            </div>
+            <div class="cond branch branch-purple" id="sec_kidsW">
+                <div class="g g2" style="margin-bottom:15px;">
+                    <div class="fg"><label>عدد الأولاد</label><input type="number" id="kidsCountW" min="1" max="20" placeholder="العدد" onchange="buildKids('kidsBoxW',this.value)"></div>
+                </div>
+                <div id="kidsBoxW"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ═══════════ 4 - السكن ═══════════ -->
+<div class="section glow-green">
+    <div class="sec-head">
+        <span class="sec-num">4</span>
+        <h3>السكن والعنوان</h3>
+    </div>
+    <div class="sec-body">
+        <div class="g g2">
+            <div class="fg spanall"><label><span class="rq">*</span> العنوان الحالي</label><input type="text" name="address" placeholder="العنوان التفصيلي" required></div>
+            <div class="fg">
+                <label><span class="rq">*</span> نوع السكن</label>
+                <select name="housingType" required>
+                    <option value="">-- اختر --</option>
+                    <option>ملك</option><option>إيجار</option><option>رهن</option><option>مستضاف</option><option>أخرى</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 5 - العمل ═══════════ -->
+<div class="section glow-purple">
+    <div class="sec-head">
+        <span class="sec-num">5</span>
+        <h3>العمل والمعيل</h3>
+    </div>
+    <div class="sec-body">
+        <div class="fg">
+            <label><span class="rq">*</span> حالة العمل</label>
+            <div class="pills">
+                <div class="pill p-green"><input type="radio" name="employment" id="emp_y" value="employed" onchange="toggleEmp()"><label for="emp_y">يعمل</label></div>
+                <div class="pill p-red"><input type="radio" name="employment" id="emp_n" value="unemployed" onchange="toggleEmp()"><label for="emp_n">عاطل عن العمل</label></div>
+            </div>
+        </div>
+        <div class="cond branch branch-green" id="sec_emp">
+            <div class="g g2">
+                <div class="fg"><label>المهنة</label><input type="text" name="profession" placeholder="المهنة"></div>
+                <div class="fg"><label>جهة العمل</label><input type="text" name="employer" placeholder="اختياري"></div>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fg"><label><span class="rq">*</span> المعيل</label><input type="text" name="breadwinner" placeholder="من هو المعيل الحالي؟"></div>
+    </div>
+</div>
+
+<!-- ═══════════ 6 - الصحة ═══════════ -->
+<div class="section glow-cyan">
+    <div class="sec-head">
+        <span class="sec-num">6</span>
+        <h3>الحالة الصحية</h3>
+    </div>
+    <div class="sec-body">
+        <div class="fg">
+            <label><span class="rq">*</span> هل يعاني من أمراض مزمنة؟</label>
+            <div class="pills">
+                <div class="pill p-red"><input type="radio" name="chronic" id="chr_y" value="yes" onchange="toggleChronic()"><label for="chr_y">نعم</label></div>
+                <div class="pill p-green"><input type="radio" name="chronic" id="chr_n" value="no" onchange="toggleChronic()"><label for="chr_n">لا يوجد</label></div>
+            </div>
+        </div>
+        <div class="cond branch branch-red" id="sec_chronic">
+            <label style="font-weight:700; color:var(--text-label); font-size:0.88em;">أضف الأمراض:</label>
+            <div class="tags" id="tagBox"></div>
+            <div class="add-row">
+                <input type="text" id="diseaseInp" placeholder="اكتب اسم المرض..."
+                       style="padding:12px 16px; background:var(--bg-input); border:2px solid var(--border); border-radius:12px; color:var(--text); font-family:'Tajawal',sans-serif; font-size:0.95em; outline:none; flex:1;"
+                       onkeypress="if(event.key==='Enter'){event.preventDefault();addTag();}">
+                <button type="button" class="add-btn" onclick="addTag()">+ إضافة</button>
+            </div>
+            <input type="hidden" name="diseases" id="diseasesHidden">
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 7 - التحصيل والقانون ═══════════ -->
+<div class="section glow-purple">
+    <div class="sec-head">
+        <span class="sec-num">7</span>
+        <h3>التحصيل الدراسي والوضع القانوني</h3>
+    </div>
+    <div class="sec-body">
+        <div class="g g2">
+            <div class="fg">
+                <label><span class="rq">*</span> التحصيل الدراسي</label>
+                <select name="education" required>
+                    <option value="">-- اختر --</option>
+                    <option>أمّي</option><option>ابتدائية</option><option>متوسطة</option>
+                    <option>إعدادية / ثانوية</option><option>دبلوم</option><option>بكالوريوس</option>
+                    <option>ماجستير</option><option>دكتوراه</option>
+                </select>
+            </div>
+        </div>
+        <div class="divider"></div>
+        <div class="fg">
+            <label>هل توجد مشاكل قانونية؟</label>
+            <div class="pills">
+                <div class="pill p-amber"><input type="radio" name="legal" id="leg_y" value="yes" onchange="toggleLegal()"><label for="leg_y">نعم</label></div>
+                <div class="pill p-green"><input type="radio" name="legal" id="leg_n" value="no" onchange="toggleLegal()"><label for="leg_n">لا</label></div>
+            </div>
+        </div>
+        <div class="cond branch branch-amber" id="sec_legal">
+            <div class="fg"><label>تفاصيل المشاكل القانونية</label><textarea name="legalDetails" placeholder="اشرح بالتفصيل..."></textarea></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 8 - جمعيات ═══════════ -->
+<div class="section glow-green">
+    <div class="sec-head">
+        <span class="sec-num">8</span>
+        <h3>ارتباط بجمعيات أخرى</h3>
+    </div>
+    <div class="sec-body">
+        <div class="fg">
+            <label>هل مسجل في جمعية أو منظمة أخرى؟</label>
+            <div class="pills">
+                <div class="pill"><input type="radio" name="assoc" id="asc_y" value="yes" onchange="toggleAssoc()"><label for="asc_y">نعم</label></div>
+                <div class="pill"><input type="radio" name="assoc" id="asc_n" value="no" onchange="toggleAssoc()"><label for="asc_n">لا</label></div>
+            </div>
+        </div>
+        <div class="cond branch" id="sec_assoc">
+            <div class="g g2">
+                <div class="fg"><label>اسم الجمعية / المنظمة</label><input type="text" name="assocName" placeholder="الاسم"></div>
+                <div class="fg"><label>نوع الخدمة المقدمة</label><input type="text" name="serviceType" placeholder="ما الخدمة؟"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════ 9 - إضافي ═══════════ -->
+<div class="section glow-cyan">
+    <div class="sec-head">
+        <span class="sec-num">9</span>
+        <h3>تفاصيل إضافية</h3>
+    </div>
+    <div class="sec-body">
+        <div class="fg"><label>ملاحظات أو تفاصيل أخرى</label><textarea name="notes" placeholder="أي معلومات إضافية..." rows="4"></textarea></div>
+    </div>
+</div>
+
+<!-- ═══════════ ACTIONS ═══════════ -->
+<div class="actions">
+    <button type="button" class="btn btn-ghost" onclick="resetAll()">🔄 إعادة تعيين</button>
+    <button type="submit" class="btn btn-main">✅ حفظ البيانات</button>
+</div>
+
+</form>
+
+<div class="footer">جمعية <span>حقنا</span> &copy; 2024 — جميع الحقوق محفوظة</div>
+</div>
+
+<script>
+// ══════════════ DATE POPULATE ══════════════
+const months = ['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+
+function populateDates() {
+    document.querySelectorAll('.ds').forEach(group => {
+        const [dayS, monthS, yearS] = group.querySelectorAll('select');
+
+        if (dayS.options.length <= 1) {
+            for (let d = 1; d <= 31; d++) {
+                const o = document.createElement('option');
+                o.value = d; o.textContent = d;
+                dayS.appendChild(o);
+            }
+        }
+
+        if (monthS.options.length <= 1) {
+            months.forEach((n, i) => {
+                const o = document.createElement('option');
+                o.value = i + 1; o.textContent = n;
+                monthS.appendChild(o);
+            });
+        }
+
+        if (yearS.options.length <= 1) {
+            const now = new Date().getFullYear();
+            for (let y = now; y >= 1940; y--) {
+                const o = document.createElement('option');
+                o.value = y; o.textContent = y;
+                yearS.appendChild(o);
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', populateDates);
+
+// ══════════════ LOGO ══════════════
+function loadLogo(inp) {
+    if (inp.files && inp.files[0]) {
+        const r = new FileReader();
+        r.onload = e => {
+            document.getElementById('logoImg').src = e.target.result;
+            document.getElementById('logoImg').style.display = 'block';
+            document.getElementById('logoPH').style.display = 'none';
+        };
+        r.readAsDataURL(inp.files[0]);
+    }
+}
+
+// ══════════════ FILE MARK ══════════════
+function markFile(inp, id) {
+    const lbl = document.getElementById(id);
+    if (inp.files.length) {
+        lbl.textContent = '✅ ' + inp.files[0].name;
+        lbl.classList.add('done');
+    }
+}
+
+// ══════════════ TOGGLE HELPERS ══════════════
+function show(id) { document.getElementById(id).classList.add('show'); }
+function hide(id) { document.getElementById(id).classList.remove('show'); }
+
+// STATUS
+function toggleStatus() {
+    const v = document.querySelector('[name=status]:checked')?.value;
+    hide('sec_survivor'); hide('sec_dead');
+    if (v === 'survivor') show('sec_survivor');
+    else if (v === 'deceased') show('sec_dead');
+}
+
+// MARITAL
+function toggleMarital() {
+    const v = document.querySelector('[name=marital]:checked')?.value;
+    hide('sec_single'); hide('sec_married'); hide('sec_widowed');
+    if (v === 'single') show('sec_single');
+    else if (v === 'married') show('sec_married');
+    else if (v === 'widowed' || v === 'divorced') show('sec_widowed');
+}
+
+// KIDS
+function toggleKids() {
+    const v = document.querySelector('[name=hasKids]:checked')?.value;
+    if (v === 'yes') show('sec_kids');
+    else { hide('sec_kids'); document.getElementById('kidsBox').innerHTML = ''; }
+}
+
+function toggleKidsW() {
+    const v = document.querySelector('[name=hasKidsW]:checked')?.value;
+    if (v === 'yes') show('sec_kidsW');
+    else { hide('sec_kidsW'); document.getElementById('kidsBoxW').innerHTML = ''; }
+}
+
+// EMPLOYMENT
+function toggleEmp() {
+    const v = document.querySelector('[name=employment]:checked')?.value;
+    if (v === 'employed') show('sec_emp'); else hide('sec_emp');
+}
+
+// CHRONIC
+function toggleChronic() {
+    const v = document.querySelector('[name=chronic]:checked')?.value;
+    if (v === 'yes') show('sec_chronic');
+    else { hide('sec_chronic'); tags = []; renderTags(); }
+}
+
+// LEGAL
+function toggleLegal() {
+    const v = document.querySelector('[name=legal]:checked')?.value;
+    if (v === 'yes') show('sec_legal'); else hide('sec_legal');
+}
+
+// ASSOC
+function toggleAssoc() {
+    const v = document.querySelector('[name=assoc]:checked')?.value;
+    if (v === 'yes') show('sec_assoc'); else hide('sec_assoc');
+}
+
+// ══════════════ CHILDREN CARDS ══════════════
+function buildKids(boxId, count) {
+    const box = document.getElementById(boxId);
+    box.innerHTML = '';
+    const n = parseInt(count) || 0;
+    for (let i = 1; i <= n; i++) {
+        const uid = boxId + '_' + i;
+        box.innerHTML += `
+        <div class="child-card">
+            <div class="child-head">
+                <h4><span class="cn">${i}</span> بيانات الولد رقم ${i}</h4>
+            </div>
+            <div class="g g2">
+                <div class="fg"><label>الاسم</label><input type="text" name="cName_${uid}" placeholder="اسم الولد"></div>
+                <div class="fg"><label>العمر</label><input type="number" name="cAge_${uid}" placeholder="العمر" min="0" max="100"></div>
+                <div class="fg">
+                    <label>التحصيل العلمي</label>
+                    <select name="cEdu_${uid}">
+                        <option value="">-- اختر --</option>
+                        <option>لا يدرس</option><option>روضة</option><option>ابتدائية</option>
+                        <option>متوسطة</option><option>إعدادية</option><option>جامعة</option><option>خرّيج</option>
+                    </select>
+                </div>
+                <div class="fg"><label>المهنة</label><input type="text" name="cJob_${uid}" placeholder="إن وجدت"></div>
+                <div class="fg spanall">
+                    <label>الحالة الصحية</label>
+                    <select name="cHP_${uid}" onchange="toggleChildHP(this,'chd_${uid}')">
+                        <option value="">-- اختر --</option>
+                        <option value="healthy">سليم</option>
+                        <option value="special">ذوي احتياجات خاصة</option>
+                    </select>
+                </div>
+                <div class="fg spanall hdet" id="chd_${uid}">
+                    <label>تفاصيل الحالة / نوع الاحتياج</label>
+                    <textarea name="cHPD_${uid}" placeholder="اشرح..."></textarea>
+                </div>
+            </div>
+        </div>`;
+    }
+}
+
+function toggleChildHP(sel, detId) {
+    const el = document.getElementById(detId);
+    if (sel.value === 'special') el.classList.add('show');
+    else el.classList.remove('show');
+}
+
+// ══════════════ DISEASE TAGS ══════════════
+let tags = [];
+
+function addTag() {
+    const inp = document.getElementById('diseaseInp');
+    const val = inp.value.trim();
+    if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
+    inp.value = ''; inp.focus();
+}
+
+function removeTag(i) { tags.splice(i, 1); renderTags(); }
+
+function renderTags() {
+    document.getElementById('tagBox').innerHTML = tags.map((t, i) =>
+        `<span class="tag">${t}<span class="x" onclick="removeTag(${i})">✕</span></span>`
+    ).join('');
+    document.getElementById('diseasesHidden').value = tags.join('، ');
+}
+
+// ══════════════ RESET ══════════════
+function resetAll() {
+    if (!confirm('هل أنت متأكد من إعادة تعيين جميع البيانات؟')) return;
+    document.getElementById('mainForm').reset();
+    document.querySelectorAll('.cond').forEach(e => e.classList.remove('show'));
+    document.querySelectorAll('.hdet').forEach(e => e.classList.remove('show'));
+    ['kidsBox', 'kidsBoxW'].forEach(id => document.getElementById(id).innerHTML = '');
+    tags = []; renderTags();
+    ['fl_photo', 'fl_doc'].forEach(id => {
+        const el = document.getElementById(id);
+        el.textContent = id === 'fl_photo' ? '📷 اختر صورة' : '📄 ارفق وثيقة';
+        el.classList.remove('done');
+    });
+    document.getElementById('logoImg').style.display = 'none';
+    document.getElementById('logoPH').style.display = '';
+}
+
+// ══════════════ SUBMIT ══════════════
+document.getElementById('mainForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fd = new FormData(this);
+    const data = {};
+    fd.forEach((v, k) => data[k] = v);
+    console.log('📋 البيانات:', data);
+    alert('✅ تم حفظ البيانات بنجاح!');
+});
+</script>
+
+</body>
+</html>
