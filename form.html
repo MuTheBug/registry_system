@@ -999,7 +999,7 @@
 </div>
 
 <!-- ═══════════ 5 - العمل ═══════════ -->
-<div class="section glow-purple">
+<div class="section glow-purple" id="sec_employment">
     <div class="sec-head">
         <span class="sec-num">5</span>
         <h3>العمل والمعيل</h3>
@@ -1064,7 +1064,7 @@
                 <select name="education" required>
                     <option value="">-- اختر --</option>
                     <option>أمّي</option><option>ابتدائية</option><option>متوسطة</option>
-                    <option>إعدادية / ثانوية</option><option>دبلوم</option><option>بكالوريوس</option>
+                    <option>إعدادية / ثانوية</option><option>بكالوريوس</option>
                     <option>ماجستير</option><option>دكتوراه</option>
                 </select>
             </div>
@@ -1128,7 +1128,7 @@
 <div class="footer">
     <img src="logo.jpg" alt="شعار جمعية حقنا" style="width:100px; height:auto; border-radius:16px; margin-bottom:12px; border:2px solid var(--border);">
     <p style="margin-top:8px;">تصميم فريق جمعية حقنا بكل <span style="color:#ef4444; font-size:1.4em; -webkit-text-fill-color:#ef4444;">&#10084;</span> حب</p>
-    <p style="margin-top:6px;">جمعية <span>حقنا</span> &copy; 2024 — جميع الحقوق محفوظة</p>
+    <p style="margin-top:6px;">جمعية <span>حقنا</span> &copy; 2026 — جميع الحقوق محفوظة</p>
 </div>
 </div>
 
@@ -1201,6 +1201,14 @@ function toggleStatus() {
     hide('sec_survivor'); hide('sec_dead');
     if (v === 'survivor') show('sec_survivor');
     else if (v === 'deceased') show('sec_dead');
+
+    // Hide employment section for deceased
+    const empSection = document.getElementById('sec_employment');
+    if (v === 'deceased') {
+        empSection.style.display = 'none';
+    } else {
+        empSection.style.display = '';
+    }
 }
 
 // MARITAL
@@ -1329,8 +1337,7 @@ function resetAll() {
         el.textContent = id === 'fl_photo' ? '📷 اختر صورة' : '📄 ارفق وثيقة';
         el.classList.remove('done');
     });
-    document.getElementById('logoImg').style.display = 'none';
-    document.getElementById('logoPH').style.display = '';
+    document.getElementById('logoImg').style.display = 'block';
 }
 
 // ══════════════ NOTIFICATION ══════════════

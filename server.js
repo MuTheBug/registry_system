@@ -262,9 +262,9 @@ app.get('/api/records', (req, res) => {
         const params = [];
 
         if (search) {
-            where += ' AND (first_name LIKE ? OR last_name LIKE ? OR father_name LIKE ? OR national_id LIKE ? OR phone LIKE ?)';
+            where += ' AND (first_name LIKE ? OR last_name LIKE ? OR father_name LIKE ? OR national_id LIKE ? OR phone LIKE ? OR mother_name LIKE ?)';
             const s = `%${search}%`;
-            params.push(s, s, s, s, s);
+            params.push(s, s, s, s, s, s);
         }
 
         if (status) {
@@ -276,6 +276,26 @@ app.get('/api/records', (req, res) => {
             where += ' AND province = ?';
             params.push(province);
         }
+
+        // Advanced filters
+        const gender = req.query.gender || '';
+        const marital = req.query.marital || '';
+        const education = req.query.education || '';
+        const chronic = req.query.chronic || '';
+        const bloodType = req.query.bloodType || '';
+        const arrestYearFrom = req.query.arrestYearFrom || '';
+        const arrestYearTo = req.query.arrestYearTo || '';
+        const hasPhoto = req.query.hasPhoto || '';
+
+        if (gender) { where += ' AND gender = ?'; params.push(gender); }
+        if (marital) { where += ' AND marital = ?'; params.push(marital); }
+        if (education) { where += ' AND education = ?'; params.push(education); }
+        if (chronic) { where += ' AND chronic = ?'; params.push(chronic); }
+        if (bloodType) { where += ' AND blood_type = ?'; params.push(bloodType); }
+        if (arrestYearFrom) { where += ' AND arrest_year >= ?'; params.push(parseInt(arrestYearFrom)); }
+        if (arrestYearTo) { where += ' AND arrest_year <= ?'; params.push(parseInt(arrestYearTo)); }
+        if (hasPhoto === 'yes') { where += ' AND photo_path IS NOT NULL'; }
+        if (hasPhoto === 'no') { where += ' AND photo_path IS NULL'; }
 
         const total = db.prepare(`SELECT COUNT(*) as count FROM records ${where}`).get(...params).count;
         const records = db.prepare(`SELECT * FROM records ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
@@ -351,6 +371,84 @@ app.get('/api/stats', (req, res) => {
         res.json({ total, enforced, survivors, deceased });
     } catch (err) {
         res.status(500).json({ error: 'Failed to get stats' });
+    }
+});
+
+// Database backup endpoint
+app.get('/api/backup', (req, res) => {
+    try {
+        // Checkpoint WAL to ensure all data is in the main DB file
+        db.pragma('wal_checkpoint(TRUNCATE)');
+
+        const backupName = `registry_backup_${new Date().toISOString().slice(0,10).replace(/-/g,'')}_${Date.now()}.db`;
+        const backupPath = path.join(__dirname, backupName);
+
+        // Copy the database file
+        fs.copyFileSync(DB_PATH, backupPath);
+
+        res.download(backupPath, backupName, (err) => {
+            // Clean up the temporary backup file after download
+            if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+            if (err && !res.headersSent) {
+                res.status(500).json({ error: 'Backup download failed' });
+            }
+        });
+    } catch (err) {
+        console.error('Backup error:', err);
+        res.status(500).json({ error: 'Failed to create backup: ' + err.message });
+    }
+});
+
+// Export as CSV
+app.get('/api/export/csv', (req, res) => {
+    try {
+        const records = db.prepare('SELECT * FROM records ORDER BY id DESC').all();
+        const headers = [
+            'id','created_at','first_name','father_name','last_name','gender','mother_name',
+            'birth_day','birth_month','birth_year','province','national_id','phone','blood_type',
+            'arrest_day','arrest_month','arrest_year','arrest_place','arrest_authority','arrest_reason',
+            'arrest_causer','status','release_day','release_month','release_year',
+            'death_day','death_month','death_year','marital','address','housing_type',
+            'employment','profession','employer','breadwinner','chronic','diseases',
+            'education','legal','legal_details','assoc','assoc_name','service_type','notes'
+        ];
+
+        // BOM for Excel Arabic support
+        let csv = '\ufeff' + headers.join(',') + '\n';
+        for (const r of records) {
+            csv += headers.map(h => {
+                const val = r[h];
+                if (val == null) return '';
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+            }).join(',') + '\n';
+        }
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="registry_export.csv"');
+        res.send(csv);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to export CSV' });
+    }
+});
+
+// Province stats for reports
+app.get('/api/stats/provinces', (req, res) => {
+    try {
+        const rows = db.prepare('SELECT province, COUNT(*) as count FROM records GROUP BY province ORDER BY count DESC').all();
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to get province stats' });
+    }
+});
+
+// Gender stats
+app.get('/api/stats/gender', (req, res) => {
+    try {
+        const rows = db.prepare('SELECT gender, COUNT(*) as count FROM records GROUP BY gender').all();
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to get gender stats' });
     }
 });
 
