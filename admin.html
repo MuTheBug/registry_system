@@ -229,6 +229,8 @@
         }
         .act-view { background: var(--accent-glow); color: var(--accent); }
         .act-view:hover { background: rgba(6,182,212,0.25); }
+        .act-edit { background: var(--amber-glow); color: var(--amber); }
+        .act-edit:hover { background: rgba(245,158,11,0.25); }
         .act-print { background: var(--accent2-glow); color: var(--accent2); }
         .act-print:hover { background: rgba(139,92,246,0.25); }
         .act-del { background: var(--red-glow); color: var(--red); }
@@ -414,6 +416,7 @@
         <div class="header-actions">
             <a href="/" class="btn-form">+ تسجيل جديد</a>
             <button class="btn-backup" onclick="backupDB()">نسخ احتياطي</button>
+            <a href="/api/logout" class="reset-btn" style="text-decoration:none; display:flex; align-items:center;">خروج</a>
         </div>
     </div>
     <div class="header-line"></div>
@@ -503,9 +506,10 @@
                 <label>التحصيل الدراسي</label>
                 <select id="educationFilter">
                     <option value="">الكل</option>
-                    <option>أمّي</option><option>ابتدائية</option><option>متوسطة</option>
-                    <option>إعدادية / ثانوية</option><option>بكالوريوس</option>
-                    <option>ماجستير</option><option>دكتوراه</option>
+                    <option>أمّي</option><option>ابتدائية</option>
+                    <option>إعدادية</option><option>ثانوية</option>
+                    <option>بكالوريوس</option><option>ماجستير</option>
+                    <option>دكتوراه</option>
                 </select>
             </div>
             <div class="filter-group">
@@ -539,6 +543,14 @@
                     <option value="yes">يوجد صورة</option>
                     <option value="no">بدون صورة</option>
                 </select>
+            </div>
+            <div class="filter-group">
+                <label>عدد الأولاد (كلي) \342\211\245</label>
+                <input type="number" id="minKidsFilter" placeholder="أكبر من أو يساوي" min="0">
+            </div>
+            <div class="filter-group">
+                <label>عدد الأولاد (تحت 18) \342\211\245</label>
+                <input type="number" id="minUnder18Filter" placeholder="أكبر من أو يساوي" min="0">
             </div>
         </div>
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -604,6 +616,13 @@ let currentPage = 1;
 const LIMIT = 50;
 let currentRecordId = null;
 
+function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
+}
+
 // ══════════════ STATS ══════════════
 async function loadStats() {
     try {
@@ -638,6 +657,8 @@ async function loadRecords(page) {
     const arrestYearFrom = document.getElementById('arrestYearFrom').value;
     const arrestYearTo = document.getElementById('arrestYearTo').value;
     const hasPhoto = document.getElementById('hasPhotoFilter').value;
+    const minKids = document.getElementById('minKidsFilter').value;
+    const minUnder18 = document.getElementById('minUnder18Filter').value;
 
     if (gender) params.set('gender', gender);
     if (marital) params.set('marital', marital);
@@ -647,6 +668,8 @@ async function loadRecords(page) {
     if (arrestYearFrom) params.set('arrestYearFrom', arrestYearFrom);
     if (arrestYearTo) params.set('arrestYearTo', arrestYearTo);
     if (hasPhoto) params.set('hasPhoto', hasPhoto);
+    if (minKids) params.set('minKids', minKids);
+    if (minUnder18) params.set('minUnder18', minUnder18);
 
     try {
         const res = await fetch('/api/records?' + params);
@@ -712,6 +735,7 @@ function renderTable(records) {
             <td>
                 <div class="action-btns">
                     <button class="act-btn act-view" onclick="viewRecord(${r.id})">عرض</button>
+                    <button class="act-btn act-edit" onclick="editRecord(${r.id})">تعديل</button>
                     <button class="act-btn act-print" onclick="printSingleRecord(${r.id})">طباعة</button>
                     <button class="act-btn act-del" onclick="deleteRecord(${r.id})">حذف</button>
                 </div>
@@ -820,8 +844,13 @@ async function viewRecord(id) {
         }
         html += detailRow('المعيل', r.breadwinner);
         html += detailRow('أمراض مزمنة', r.chronic === 'yes' ? (r.diseases || 'نعم') : 'لا يوجد');
-        html += detailRow('التحصيل الدراسي', r.education);
-        html += detailRow('مشاكل قانونية', r.legal === 'yes' ? (r.legal_details || 'نعم') : 'لا');
+        html += detailRow('التحصيل الدراسي', esc(r.education));
+        if (r.education === 'ثانوية') html += detailRow('نوع الثانوية', esc(r.edu_type));
+        if (['بكالوريوس', 'ماجستير', 'دكتوراه'].includes(r.education)) {
+            html += detailRow('الاختصاص', esc(r.edu_specialization));
+            html += detailRow('الجامعة', esc(r.edu_university));
+        }
+        html += detailRow('مشاكل قانونية', r.legal === 'yes' ? (esc(r.legal_details) || 'نعم') : 'لا');
 
         // Associations
         if (r.assoc === 'yes') {
@@ -883,6 +912,123 @@ function closeLightbox() {
     document.getElementById('lightbox').classList.remove('show');
 }
 
+// ══════════════ EDIT RECORD ══════════════
+async function editRecord(id) {
+    try {
+        const res = await fetch('/api/records/' + id);
+        const r = await res.json();
+        currentRecordId = id;
+        document.getElementById('modalTitle').textContent = `تعديل السجل #${r.id}`;
+
+        const provinces = ["دمشق","ريف دمشق","حلب","حمص","حماة","اللاذقية","طرطوس","إدلب","دير الزور","الرقة","الحسكة","درعا","السويداء","القنيطرة"];
+
+        let html = `<form id="editForm" onsubmit="saveEdit(event)" style="display:flex; flex-direction:column; gap:16px;">
+            <div class="detail-section-title">المعلومات الأساسية</div>
+            <div class="adv-grid">
+                <div class="filter-group"><label>الاسم</label><input name="firstName" value="${esc(r.first_name)}" required></div>
+                <div class="filter-group"><label>اسم الأب</label><input name="fatherName" value="${esc(r.father_name)}" required></div>
+                <div class="filter-group"><label>الكنية</label><input name="lastName" value="${esc(r.last_name)}" required></div>
+                <div class="filter-group"><label>اسم الأم</label><input name="motherName" value="${esc(r.mother_name)}" required></div>
+            </div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>المحافظة</label>
+                    <select name="province" required>
+                        ${provinces.map(p => `<option ${r.province===p?'selected':''}>${p}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="filter-group"><label>الرقم الوطني</label><input name="nationalId" value="${esc(r.national_id)}" required></div>
+                <div class="filter-group"><label>الهاتف</label><input name="phone" value="${esc(r.phone)}"></div>
+            </div>
+
+            <div class="detail-section-title">معلومات الاعتقال والحالة</div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>الحالة</label>
+                    <select name="status">
+                        <option value="enforced" ${r.status==='enforced'?'selected':''}>مغيب قسري</option>
+                        <option value="survivor" ${r.status==='survivor'?'selected':''}>ناجي</option>
+                        <option value="deceased" ${r.status==='deceased'?'selected':''}>متوفى</option>
+                    </select>
+                </div>
+                <div class="filter-group"><label>مكان الاعتقال</label><input name="arrestPlace" value="${esc(r.arrest_place)}"></div>
+            </div>
+
+            <div class="detail-section-title">العائلة والأولاد</div>
+            <div class="adv-grid">
+                <div class="filter-group"><label>عدد الأولاد (من الزواج الحالي)</label><input type="number" name="kidsCount" value="${r.kids_count||0}"></div>
+                <div class="filter-group"><label>عدد الأولاد (من زواج سابق)</label><input type="number" name="kidsCountW" value="${r.kids_count_w||0}"></div>
+                <div class="filter-group"><label>عدد الأولاد تحت 18</label><input type="number" name="kids_under_18_count" value="${r.kids_under_18_count||0}"></div>
+            </div>
+
+            <div class="detail-section-title">التعليم</div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>التحصيل الدراسي</label>
+                    <select name="education" id="edit_edu" onchange="toggleEditEdu()">
+                        <option ${r.education==='أمّي'?'selected':''}>أمّي</option>
+                        <option ${r.education==='ابتدائية'?'selected':''}>ابتدائية</option>
+                        <option ${r.education==='إعدادية'?'selected':''}>إعدادية</option>
+                        <option ${r.education==='ثانوية'?'selected':''}>ثانوية</option>
+                        <option ${r.education==='بكالوريوس'?'selected':''}>بكالوريوس</option>
+                        <option ${r.education==='ماجستير'?'selected':''}>ماجستير</option>
+                        <option ${r.education==='دكتوراه'?'selected':''}>دكتوراه</option>
+                    </select>
+                </div>
+                <div class="filter-group" id="edit_edu_type_box" style="display:${r.education==='ثانوية'?'block':'none'}">
+                    <label>نوع الثانوية</label>
+                    <select name="eduType">
+                        <option value="">-- اختر --</option>
+                        <option ${r.edu_type==='علمي'?'selected':''}>علمي</option>
+                        <option ${r.edu_type==='ادبي'?'selected':''}>ادبي</option>
+                    </select>
+                </div>
+            </div>
+            <div class="adv-grid" id="edit_higher_edu_box" style="display:${['بكالوريوس','ماجستير','دكتوراه'].includes(r.education)?'flex':'none'}">
+                <div class="filter-group"><label>الاختصاص</label><input name="eduSpecialization" value="${esc(r.edu_specialization)}"></div>
+                <div class="filter-group"><label>الجامعة</label><input name="eduUniversity" value="${esc(r.edu_university)}"></div>
+            </div>
+
+            <div style="margin-top:20px; display:flex; gap:10px;">
+                <button type="submit" class="filter-btn">حفظ التغييرات</button>
+                <button type="button" class="reset-btn" onclick="closeModal()">إلغاء</button>
+            </div>
+        </form>`;
+
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    } catch (e) { console.error(e); alert('خطأ في تحميل السجل'); }
+}
+
+function toggleEditEdu() {
+    const v = document.getElementById('edit_edu').value;
+    document.getElementById('edit_edu_type_box').style.display = (v === 'ثانوية') ? 'block' : 'none';
+    document.getElementById('edit_higher_edu_box').style.display = (['بكالوريوس','ماجستير','دكتوراه'].includes(v)) ? 'flex' : 'none';
+}
+
+async function saveEdit(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {};
+    formData.forEach((value, key) => { data[key] = value; });
+
+    try {
+        const res = await fetch('/api/records/' + currentRecordId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            closeModal();
+            loadRecords();
+            loadStats();
+        } else {
+            const err = await res.json();
+            alert('فشل في حفظ التغييرات: ' + (err.error || 'خطأ غير معروف'));
+        }
+    } catch (e) { alert('خطأ في الاتصال بالخادم'); }
+}
+
 // ══════════════ DELETE ══════════════
 async function deleteRecord(id) {
     if (!confirm('هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.')) return;
@@ -919,6 +1065,8 @@ function resetFilters() {
     document.getElementById('arrestYearFrom').value = '';
     document.getElementById('arrestYearTo').value = '';
     document.getElementById('hasPhotoFilter').value = '';
+    document.getElementById('minKidsFilter').value = '';
+    document.getElementById('minUnder18Filter').value = '';
     currentPage = 1;
     loadRecords();
 }
