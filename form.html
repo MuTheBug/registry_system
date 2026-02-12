@@ -704,6 +704,11 @@
             box-shadow: 0 0 40px var(--green-glow), 0 8px 40px rgba(0,0,0,0.3);
         }
 
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
         @media print {
             .main-header { position: static; }
             .section { break-inside: avoid; box-shadow: none !important; }
@@ -724,10 +729,8 @@
 <!-- ═══════════ HEADER ═══════════ -->
 <header class="main-header">
     <div class="header-inner">
-        <div class="logo-box" title="اضغط لإضافة الشعار">
-            <img id="logoImg" src="" alt="Logo">
-            <span class="placeholder" id="logoPH">شعار<br>الجمعية</span>
-            <input type="file" accept="image/*" onchange="loadLogo(this)">
+        <div class="logo-box" title="شعار الجمعية" style="cursor:default;">
+            <img id="logoImg" src="logo.jpg" alt="Logo" style="display:block;">
         </div>
         <div class="header-text">
             <h1><span class="t1">جمعية </span><span class="t2">حقنا</span></h1>
@@ -778,11 +781,10 @@
                 <label><span class="rq">*</span> المحافظة</label>
                 <select name="province" required>
                     <option value="">-- اختر --</option>
-                    <option>بغداد</option><option>البصرة</option><option>نينوى</option><option>أربيل</option>
-                    <option>السليمانية</option><option>دهوك</option><option>كركوك</option><option>ديالى</option>
-                    <option>الأنبار</option><option>بابل</option><option>كربلاء</option><option>النجف</option>
-                    <option>واسط</option><option>صلاح الدين</option><option>ميسان</option><option>ذي قار</option>
-                    <option>المثنى</option><option>القادسية</option><option>حلبجة</option><option>أخرى</option>
+                    <option>دمشق</option><option>ريف دمشق</option><option>حلب</option><option>حمص</option>
+                    <option>حماة</option><option>اللاذقية</option><option>طرطوس</option><option>إدلب</option>
+                    <option>دير الزور</option><option>الرقة</option><option>الحسكة</option><option>درعا</option>
+                    <option>السويداء</option><option>القنيطرة</option><option>أخرى</option>
                 </select>
             </div>
             <div class="fg"><label><span class="rq">*</span> الرقم الوطني</label><input type="text" name="nationalId" placeholder="الرقم الوطني" required></div>
@@ -1123,7 +1125,11 @@
 
 </form>
 
-<div class="footer">جمعية <span>حقنا</span> &copy; 2024 — جميع الحقوق محفوظة</div>
+<div class="footer">
+    <img src="logo.jpg" alt="شعار جمعية حقنا" style="width:100px; height:auto; border-radius:16px; margin-bottom:12px; border:2px solid var(--border);">
+    <p style="margin-top:8px;">تصميم فريق جمعية حقنا بكل <span style="color:#ef4444; font-size:1.4em; -webkit-text-fill-color:#ef4444;">&#10084;</span> حب</p>
+    <p style="margin-top:6px;">جمعية <span>حقنا</span> &copy; 2024 — جميع الحقوق محفوظة</p>
+</div>
 </div>
 
 <script>
@@ -1327,14 +1333,54 @@ function resetAll() {
     document.getElementById('logoPH').style.display = '';
 }
 
+// ══════════════ NOTIFICATION ══════════════
+function showNotification(msg, type) {
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+    const div = document.createElement('div');
+    div.className = 'notification';
+    const bg = type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' :
+               type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' :
+               'linear-gradient(135deg, #f59e0b, #d97706)';
+    div.style.cssText = `position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:10000;padding:16px 32px;border-radius:14px;color:#fff;font-family:'Tajawal',sans-serif;font-weight:700;font-size:1.05em;background:${bg};box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:slideDown 0.4s ease;text-align:center;max-width:90%;`;
+    div.textContent = msg;
+    document.body.appendChild(div);
+    setTimeout(() => { div.style.opacity = '0'; div.style.transition = 'opacity 0.5s'; setTimeout(() => div.remove(), 500); }, 4000);
+}
+
 // ══════════════ SUBMIT ══════════════
-document.getElementById('mainForm').addEventListener('submit', function(e) {
+document.getElementById('mainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const fd = new FormData(this);
-    const data = {};
-    fd.forEach((v, k) => data[k] = v);
-    console.log('📋 البيانات:', data);
-    alert('✅ تم حفظ البيانات بنجاح!');
+    const submitBtn = this.querySelector('[type=submit]');
+    const origText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '⏳ جاري الحفظ...';
+    submitBtn.disabled = true;
+
+    try {
+        const fd = new FormData(this);
+        // Add disease tags
+        fd.set('diseases', tags.join('، '));
+
+        const resp = await fetch('/api/records', {
+            method: 'POST',
+            body: fd
+        });
+
+        const result = await resp.json();
+
+        if (resp.ok) {
+            showNotification('تم حفظ البيانات بنجاح! رقم السجل: ' + result.id, 'success');
+            resetAll();
+        } else {
+            showNotification('خطأ: ' + (result.error || 'فشل في حفظ البيانات'), 'error');
+        }
+    } catch (err) {
+        showNotification('خطأ في الاتصال بالخادم. تأكد من تشغيل السيرفر.', 'error');
+        console.error(err);
+    } finally {
+        submitBtn.innerHTML = origText;
+        submitBtn.disabled = false;
+    }
 });
 </script>
 

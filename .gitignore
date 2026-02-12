@@ -1,0 +1,8 @@
+node_modules/
+uploads/
+registry.db
+registry.db-wal
+registry.db-shm
+*.log
+.DS_Store
+Thumbs.db

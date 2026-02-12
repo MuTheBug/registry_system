@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جمعية حقنا - لوحة الإدارة</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #151c2c;
+            --bg-card-hover: #1a2236;
+            --bg-input: #0d1320;
+            --bg-input-focus: #111a2e;
+            --border: #1e2a42;
+            --border-hover: #2d3f65;
+            --border-focus: #06b6d4;
+            --accent: #06b6d4;
+            --accent-glow: rgba(6, 182, 212, 0.15);
+            --accent2: #8b5cf6;
+            --accent2-glow: rgba(139, 92, 246, 0.15);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.15);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
+            --amber: #f59e0b;
+            --amber-glow: rgba(245, 158, 11, 0.15);
+            --text: #e2e8f0;
+            --text-dim: #64748b;
+            --text-label: #94a3b8;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text);
+            background-image:
+                radial-gradient(ellipse at 20% 0%, rgba(6,182,212,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 100%, rgba(139,92,246,0.06) 0%, transparent 60%);
+        }
+
+        .bg-effects {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+        }
+        .bg-effects .orb {
+            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+        .bg-effects .orb:nth-child(1) { width:400px;height:400px;background:rgba(6,182,212,0.08);top:-100px;right:-100px; }
+        .bg-effects .orb:nth-child(2) { width:350px;height:350px;background:rgba(139,92,246,0.08);bottom:-80px;left:-80px;animation-delay:-7s; }
+
+        @keyframes float {
+            0%,100%{transform:translate(0,0) scale(1)}
+            33%{transform:translate(30px,-30px) scale(1.05)}
+            66%{transform:translate(-20px,20px) scale(0.95)}
+        }
+
+        /* Header */
+        .main-header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(10, 14, 23, 0.85);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--border);
+        }
+        .header-inner {
+            max-width: 1200px; margin: 0 auto;
+            display: flex; align-items: center; gap: 20px; padding: 14px 24px;
+        }
+        .logo-box {
+            width: 50px; height: 50px; background: var(--bg-card); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid var(--border); overflow: hidden; flex-shrink: 0;
+        }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+        .header-text h1 { font-size: 1.5em; font-weight: 900; }
+        .header-text h1 .t1 { color: var(--text); }
+        .header-text h1 .t2 {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .header-text p { color: var(--text-dim); font-size: 0.85em; margin-top: 2px; }
+        .header-line { height: 2px; background: linear-gradient(90deg, transparent, var(--accent), var(--accent2), transparent); }
+        .header-actions { margin-right: auto; display: flex; gap: 10px; }
+        .header-actions a {
+            padding: 10px 20px; border-radius: 12px; text-decoration: none;
+            font-weight: 700; font-size: 0.9em; transition: all 0.3s;
+        }
+        .btn-form { background: var(--bg-card); color: var(--accent); border: 2px solid var(--border); }
+        .btn-form:hover { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+        /* Main content */
+        .wrapper { max-width: 1200px; margin: 24px auto; padding: 0 20px 50px; position: relative; z-index: 1; }
+
+        /* Stats */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; text-align: center; transition: all 0.3s;
+        }
+        .stat-card:hover { border-color: var(--border-hover); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .stat-number { font-size: 2.2em; font-weight: 900; margin-bottom: 4px; }
+        .stat-label { font-size: 0.9em; color: var(--text-dim); font-weight: 600; }
+        .stat-total .stat-number { color: var(--accent); }
+        .stat-enforced .stat-number { color: var(--amber); }
+        .stat-survivors .stat-number { color: var(--green); }
+        .stat-deceased .stat-number { color: var(--red); }
+
+        /* Search/Filter bar */
+        .filter-bar {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 20px; margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+        .filter-group label { font-size: 0.82em; font-weight: 600; color: var(--text-label); }
+        .filter-group input, .filter-group select {
+            padding: 11px 14px; background: var(--bg-input); border: 2px solid var(--border);
+            border-radius: 10px; color: var(--text); font-family: 'Tajawal', sans-serif;
+            font-size: 0.9em; outline: none; transition: all 0.3s;
+        }
+        .filter-group input:focus, .filter-group select:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+        .filter-group select {
+            cursor: pointer; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 12 12'%3E%3Cpath fill='%2306b6d4' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: left 10px center; padding-left: 28px;
+        }
+        .filter-group select option { background: var(--bg-secondary); color: var(--text); }
+        .filter-btn {
+            padding: 11px 24px; background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff; border: none; border-radius: 10px; cursor: pointer;
+            font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.9em;
+            transition: all 0.3s; white-space: nowrap;
+        }
+        .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px var(--accent-glow); }
+        .export-btn {
+            padding: 11px 20px; background: var(--bg-card); border: 2px solid var(--green);
+            color: var(--green); border-radius: 10px; cursor: pointer;
+            font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.9em;
+            transition: all 0.3s; white-space: nowrap;
+        }
+        .export-btn:hover { background: var(--green-glow); box-shadow: 0 0 20px var(--green-glow); }
+
+        /* Table */
+        .table-container {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            overflow: hidden;
+        }
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        thead th {
+            background: rgba(6, 182, 212, 0.06); padding: 14px 16px;
+            text-align: right; font-weight: 700; font-size: 0.88em;
+            color: var(--accent); border-bottom: 2px solid var(--border); white-space: nowrap;
+        }
+        tbody td {
+            padding: 12px 16px; border-bottom: 1px solid var(--border);
+            font-size: 0.9em; vertical-align: middle;
+        }
+        tbody tr { transition: background 0.2s; }
+        tbody tr:hover { background: var(--bg-card-hover); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .status-badge {
+            padding: 5px 14px; border-radius: 20px; font-size: 0.82em; font-weight: 700;
+            display: inline-block; white-space: nowrap;
+        }
+        .badge-enforced { background: var(--amber-glow); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+        .badge-survivor { background: var(--green-glow); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+        .badge-deceased { background: var(--red-glow); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+
+        .photo-thumb {
+            width: 40px; height: 40px; border-radius: 10px; object-fit: cover;
+            border: 2px solid var(--border); cursor: pointer; transition: all 0.3s;
+        }
+        .photo-thumb:hover { border-color: var(--accent); transform: scale(1.1); }
+
+        .action-btns { display: flex; gap: 6px; }
+        .act-btn {
+            padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer;
+            font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.8em;
+            transition: all 0.2s;
+        }
+        .act-view { background: var(--accent-glow); color: var(--accent); }
+        .act-view:hover { background: rgba(6,182,212,0.25); }
+        .act-del { background: var(--red-glow); color: var(--red); }
+        .act-del:hover { background: rgba(239,68,68,0.25); }
+
+        /* Pagination */
+        .pagination {
+            display: flex; justify-content: center; align-items: center; gap: 8px;
+            padding: 16px; border-top: 1px solid var(--border);
+        }
+        .page-btn {
+            padding: 8px 16px; background: var(--bg-input); border: 2px solid var(--border);
+            border-radius: 10px; color: var(--text-dim); cursor: pointer;
+            font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .page-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .page-btn.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .page-info { color: var(--text-dim); font-size: 0.85em; font-weight: 600; margin: 0 8px; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px); z-index: 1000;
+            justify-content: center; align-items: flex-start; padding: 40px 20px; overflow-y: auto;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+            width: 100%; max-width: 700px; animation: slideUp 0.4s cubic-bezier(0.16,1,0.3,1);
+        }
+        .modal-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px; border-bottom: 1px solid var(--border);
+        }
+        .modal-head h2 { font-size: 1.2em; font-weight: 800; color: var(--accent); }
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 10px; background: var(--bg-input);
+            border: 2px solid var(--border); color: var(--text-dim); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2em; transition: all 0.2s;
+        }
+        .modal-close:hover { border-color: var(--red); color: var(--red); }
+        .modal-body { padding: 24px; }
+        .detail-row {
+            display: grid; grid-template-columns: 140px 1fr; gap: 8px;
+            padding: 10px 0; border-bottom: 1px solid rgba(30,42,66,0.5);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { font-weight: 700; color: var(--text-label); font-size: 0.88em; }
+        .detail-value { color: var(--text); font-size: 0.92em; }
+        .detail-section-title {
+            font-weight: 800; color: var(--accent); font-size: 1em;
+            margin-top: 16px; margin-bottom: 8px; padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+        .modal-photo {
+            width: 120px; height: 120px; border-radius: 16px; object-fit: cover;
+            border: 3px solid var(--border); margin-bottom: 12px;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-dim);
+        }
+        .empty-state .icon { font-size: 3em; margin-bottom: 12px; }
+        .empty-state p { font-size: 1.1em; font-weight: 600; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-bar { flex-direction: column; }
+            .filter-group { min-width: auto; }
+            .header-inner { padding: 10px 14px; gap: 12px; }
+            .header-text h1 { font-size: 1.2em; }
+            .header-actions a { padding: 8px 14px; font-size: 0.8em; }
+            .detail-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .stat-card { padding: 14px; }
+            .stat-number { font-size: 1.6em; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
+    </style>
+</head>
+<body>
+
+<div class="bg-effects"><div class="orb"></div><div class="orb"></div></div>
+
+<header class="main-header">
+    <div class="header-inner">
+        <div class="logo-box"><img src="logo.jpg" alt="Logo"></div>
+        <div class="header-text">
+            <h1><span class="t1">لوحة إدارة </span><span class="t2">حقنا</span></h1>
+            <p>عرض وإدارة السجلات المسجلة</p>
+        </div>
+        <div class="header-actions">
+            <a href="/" class="btn-form">+ تسجيل جديد</a>
+        </div>
+    </div>
+    <div class="header-line"></div>
+</header>
+
+<div class="wrapper">
+
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card stat-total">
+            <div class="stat-number" id="statTotal">-</div>
+            <div class="stat-label">إجمالي السجلات</div>
+        </div>
+        <div class="stat-card stat-enforced">
+            <div class="stat-number" id="statEnforced">-</div>
+            <div class="stat-label">مغيّب قسري</div>
+        </div>
+        <div class="stat-card stat-survivors">
+            <div class="stat-number" id="statSurvivors">-</div>
+            <div class="stat-label">ناجي</div>
+        </div>
+        <div class="stat-card stat-deceased">
+            <div class="stat-number" id="statDeceased">-</div>
+            <div class="stat-label">متوفى</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="filter-group" style="flex:2;">
+            <label>البحث</label>
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم، الرقم الوطني، الهاتف..." onkeypress="if(event.key==='Enter') loadRecords()">
+        </div>
+        <div class="filter-group">
+            <label>الحالة</label>
+            <select id="statusFilter">
+                <option value="">الكل</option>
+                <option value="enforced">مغيّب قسري</option>
+                <option value="survivor">ناجي</option>
+                <option value="deceased">متوفى</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>المحافظة</label>
+            <select id="provinceFilter">
+                <option value="">الكل</option>
+                <option>دمشق</option><option>ريف دمشق</option><option>حلب</option><option>حمص</option>
+                <option>حماة</option><option>اللاذقية</option><option>طرطوس</option><option>إدلب</option>
+                <option>دير الزور</option><option>الرقة</option><option>الحسكة</option><option>درعا</option>
+                <option>السويداء</option><option>القنيطرة</option>
+            </select>
+        </div>
+        <button class="filter-btn" onclick="loadRecords()">بحث</button>
+        <button class="export-btn" onclick="exportData()">تصدير JSON</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>صورة</th>
+                        <th>الاسم الكامل</th>
+                        <th>المحافظة</th>
+                        <th>الرقم الوطني</th>
+                        <th>الحالة</th>
+                        <th>تاريخ التسجيل</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="8"><div class="empty-state"><div class="icon">📂</div><p>جاري التحميل...</p></div></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h2 id="modalTitle">تفاصيل السجل</h2>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script>
+let currentPage = 1;
+const LIMIT = 50;
+
+// Load stats
+async function loadStats() {
+    try {
+        const res = await fetch('/api/stats');
+        const s = await res.json();
+        document.getElementById('statTotal').textContent = s.total;
+        document.getElementById('statEnforced').textContent = s.enforced;
+        document.getElementById('statSurvivors').textContent = s.survivors;
+        document.getElementById('statDeceased').textContent = s.deceased;
+    } catch (e) { console.error('Stats error:', e); }
+}
+
+// Load records
+async function loadRecords(page) {
+    if (page) currentPage = page;
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    const province = document.getElementById('provinceFilter').value;
+
+    const params = new URLSearchParams({ page: currentPage, limit: LIMIT });
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
+    if (province) params.set('province', province);
+
+    try {
+        const res = await fetch('/api/records?' + params);
+        const data = await res.json();
+        renderTable(data.records);
+        renderPagination(data.pagination);
+    } catch (e) {
+        document.getElementById('tableBody').innerHTML =
+            '<tr><td colspan="8"><div class="empty-state"><div class="icon">⚠️</div><p>خطأ في الاتصال بالخادم</p></div></td></tr>';
+    }
+}
+
+const months = ['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'];
+
+function statusLabel(s) {
+    if (s === 'enforced') return '<span class="status-badge badge-enforced">مغيّب قسري</span>';
+    if (s === 'survivor') return '<span class="status-badge badge-survivor">ناجي</span>';
+    if (s === 'deceased') return '<span class="status-badge badge-deceased">متوفى</span>';
+    return '<span style="color:var(--text-dim)">—</span>';
+}
+
+function renderTable(records) {
+    const tbody = document.getElementById('tableBody');
+    if (!records.length) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">📭</div><p>لا توجد سجلات</p></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = records.map(r => {
+        const photo = r.photo_path
+            ? `<img class="photo-thumb" src="/uploads/photos/${r.photo_path}" alt="صورة" onclick="viewRecord(${r.id})">`
+            : '<span style="color:var(--text-dim);font-size:0.8em;">—</span>';
+        const name = `${r.first_name} ${r.father_name} ${r.last_name}`;
+        return `<tr>
+            <td style="color:var(--text-dim);font-weight:700;">${r.id}</td>
+            <td>${photo}</td>
+            <td style="font-weight:700;">${name}</td>
+            <td>${r.province || '—'}</td>
+            <td style="font-family:monospace;direction:ltr;text-align:right;">${r.national_id || '—'}</td>
+            <td>${statusLabel(r.status)}</td>
+            <td style="color:var(--text-dim);font-size:0.85em;">${r.created_at || '—'}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="act-btn act-view" onclick="viewRecord(${r.id})">عرض</button>
+                    <button class="act-btn act-del" onclick="deleteRecord(${r.id})">حذف</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function renderPagination(p) {
+    const el = document.getElementById('pagination');
+    if (p.pages <= 1) { el.innerHTML = ''; return; }
+    let html = `<button class="page-btn" onclick="loadRecords(${p.page - 1})" ${p.page <= 1 ? 'disabled' : ''}>السابق</button>`;
+    html += `<span class="page-info">صفحة ${p.page} من ${p.pages} (${p.total} سجل)</span>`;
+    html += `<button class="page-btn" onclick="loadRecords(${p.page + 1})" ${p.page >= p.pages ? 'disabled' : ''}>التالي</button>`;
+    el.innerHTML = html;
+}
+
+// View record detail
+async function viewRecord(id) {
+    try {
+        const res = await fetch('/api/records/' + id);
+        const r = await res.json();
+        document.getElementById('modalTitle').textContent = `سجل #${r.id} — ${r.first_name} ${r.last_name}`;
+
+        let html = '';
+        if (r.photo_path) {
+            html += `<div style="text-align:center;"><img class="modal-photo" src="/uploads/photos/${r.photo_path}" alt="صورة شخصية"></div>`;
+        }
+
+        html += `<div class="detail-section-title">المعلومات الشخصية</div>`;
+        html += detailRow('الاسم الكامل', `${r.first_name} ${r.father_name} ${r.last_name}`);
+        html += detailRow('الجنس', r.gender === 'male' ? 'ذكر' : 'أنثى');
+        html += detailRow('اسم الأم', r.mother_name);
+        html += detailRow('تاريخ الميلاد', formatDate(r.birth_day, r.birth_month, r.birth_year));
+        html += detailRow('المحافظة', r.province);
+        html += detailRow('الرقم الوطني', r.national_id);
+        html += detailRow('الهاتف', r.phone);
+        html += detailRow('زمرة الدم', r.blood_type);
+
+        html += `<div class="detail-section-title">معلومات الاعتقال</div>`;
+        html += detailRow('تاريخ الاعتقال', formatDate(r.arrest_day, r.arrest_month, r.arrest_year));
+        html += detailRow('مكان الاعتقال', r.arrest_place);
+        html += detailRow('الجهة المسؤولة', r.arrest_authority);
+        html += detailRow('السبب', r.arrest_reason);
+        html += detailRow('المُسبِّب', r.arrest_causer);
+        html += detailRow('الحالة', statusLabel(r.status));
+        if (r.status === 'survivor') html += detailRow('تاريخ الخروج', formatDate(r.release_day, r.release_month, r.release_year));
+        if (r.status === 'deceased') html += detailRow('تاريخ الوفاة', formatDate(r.death_day, r.death_month, r.death_year));
+
+        html += `<div class="detail-section-title">الحالة الاجتماعية والسكن</div>`;
+        html += detailRow('الحالة الاجتماعية', maritalLabel(r.marital));
+        if (r.spouse_name) html += detailRow('اسم الزوج/ة', r.spouse_name);
+        if (r.ex_spouse_name) html += detailRow('الزوج/ة السابق/ة', r.ex_spouse_name);
+        html += detailRow('العنوان', r.address);
+        html += detailRow('نوع السكن', r.housing_type);
+
+        html += `<div class="detail-section-title">العمل والصحة والتعليم</div>`;
+        html += detailRow('حالة العمل', r.employment === 'employed' ? 'يعمل' : 'عاطل عن العمل');
+        if (r.profession) html += detailRow('المهنة', r.profession);
+        html += detailRow('المعيل', r.breadwinner);
+        html += detailRow('أمراض مزمنة', r.chronic === 'yes' ? r.diseases : 'لا يوجد');
+        html += detailRow('التحصيل الدراسي', r.education);
+        html += detailRow('مشاكل قانونية', r.legal === 'yes' ? r.legal_details : 'لا');
+
+        if (r.notes) {
+            html += `<div class="detail-section-title">ملاحظات</div>`;
+            html += detailRow('', r.notes);
+        }
+
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('detailModal').classList.add('show');
+    } catch (e) {
+        console.error(e);
+        alert('خطأ في تحميل السجل');
+    }
+}
+
+function detailRow(label, value) {
+    if (!value) return '';
+    if (label) return `<div class="detail-row"><div class="detail-label">${label}</div><div class="detail-value">${value}</div></div>`;
+    return `<div class="detail-row" style="grid-template-columns:1fr;"><div class="detail-value">${value}</div></div>`;
+}
+
+function formatDate(d, m, y) {
+    if (!y) return '—';
+    let s = '';
+    if (d) s += d + ' ';
+    if (m) s += months[m - 1] + ' ';
+    s += y;
+    return s;
+}
+
+function maritalLabel(v) {
+    const map = { single:'أعزب/عزباء', married:'متزوج/ة', widowed:'أرمل/ة', divorced:'مطلق/ة' };
+    return map[v] || '—';
+}
+
+function closeModal() {
+    document.getElementById('detailModal').classList.remove('show');
+}
+
+// Delete record
+async function deleteRecord(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا السجل؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    try {
+        const res = await fetch('/api/records/' + id, { method: 'DELETE' });
+        if (res.ok) {
+            loadRecords();
+            loadStats();
+        } else {
+            alert('فشل في حذف السجل');
+        }
+    } catch (e) { alert('خطأ في الاتصال'); }
+}
+
+// Export
+function exportData() {
+    window.open('/api/export', '_blank');
+}
+
+// Close modal on outside click
+document.getElementById('detailModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// ESC to close modal
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModal();
+});
+
+// Init
+loadStats();
+loadRecords();
+</script>
+
+</body>
+</html>
