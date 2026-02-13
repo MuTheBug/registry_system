@@ -68,6 +68,7 @@ db.exec(`
         profession TEXT,
         employer TEXT,
         breadwinner TEXT,
+        breadwinner_job TEXT,
         chronic TEXT,
         diseases TEXT,
         education TEXT,
@@ -88,7 +89,8 @@ const columnsToAdd = [
     { name: 'edu_type', type: 'TEXT' },
     { name: 'edu_specialization', type: 'TEXT' },
     { name: 'edu_university', type: 'TEXT' },
-    { name: 'kids_under_18_count', type: 'INTEGER DEFAULT 0' }
+    { name: 'kids_under_18_count', type: 'INTEGER DEFAULT 0' },
+    { name: 'breadwinner_job', type: 'TEXT' }
 ];
 for (const col of columnsToAdd) {
     try { db.exec(`ALTER TABLE records ADD COLUMN ${col.name} ${col.type}`); } catch (err) {}
@@ -158,6 +160,9 @@ function collectChildrenData(body, prefix) {
                 name: body[key],
                 age: ageVal || '',
                 education: body[`cEdu_${prefix}_${i}`] || '',
+                eduType: body[`cEduType_${prefix}_${i}`] || '',
+                specialization: body[`cSpec_${prefix}_${i}`] || '',
+                university: body[`cUniv_${prefix}_${i}`] || '',
                 job: body[`cJob_${prefix}_${i}`] || '',
                 healthStatus: body[`cHP_${prefix}_${i}`] || '',
                 healthDetails: body[`cHPD_${prefix}_${i}`] || ''
@@ -165,6 +170,15 @@ function collectChildrenData(body, prefix) {
         }
     }
     return { data: children.length > 0 ? children : null, under18Count };
+}
+
+function collectLegalData(body) {
+    const problems = [];
+    for (let i = 1; i <= 20; i++) {
+        const key = `legalProb_${i}`;
+        if (body[key]) problems.push(body[key]);
+    }
+    return problems.length > 0 ? JSON.stringify(problems) : null;
 }
 
 app.post('/api/records', upload.fields([
@@ -193,14 +207,14 @@ app.post('/api/records', upload.fields([
                 kids_under_18_count, address, housing_type, employment,
                 profession, employer, breadwinner, chronic, diseases,
                 education, edu_type, edu_specialization, edu_university,
-                legal, legal_details, assoc, assoc_name, service_type, notes
+                legal, legal_details, assoc, assoc_name, service_type, notes, breadwinner_job
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         `);
 
@@ -219,8 +233,8 @@ app.post('/api/records', upload.fields([
             u1 + u2, b.address, b.housingType, b.employment || null, b.profession || null,
             b.employer || null, b.breadwinner || null, b.chronic || null, b.diseases || null,
             b.education || null, b.eduType || null, b.eduSpecialization || null, b.eduUniversity || null,
-            b.legal || null, b.legalDetails || null, b.assoc || null, b.assocName || null,
-            b.serviceType || null, b.notes || null
+            b.legal || null, b.legal === 'yes' ? collectLegalData(b) : null, b.assoc || null, b.assocName || null,
+            b.serviceType || null, b.notes || null, b.breadwinnerJob || null
         );
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) {
@@ -297,9 +311,10 @@ app.put('/api/records/:id', authMiddleware, upload.fields([{ name: 'photo' }, { 
             guardianName:'guardian_name', guardianRelation:'guardian_relation', guardianPhone:'guardian_phone',
             kidsCount:'kids_count', kidsCountW:'kids_count_w', kids_under_18_count:'kids_under_18_count',
             address:'address', housingType:'housing_type', employment:'employment', profession:'profession',
-            employer:'employer', breadwinner:'breadwinner', chronic:'chronic', diseases:'diseases',
+            employer:'employer', breadwinner:'breadwinner', breadwinnerJob:'breadwinner_job',
+            chronic:'chronic', diseases:'diseases',
             education:'education', eduType:'edu_type', eduSpecialization:'edu_specialization',
-            eduUniversity:'edu_university', legal:'legal', legalDetails:'legal_details',
+            eduUniversity:'edu_university', legal:'legal',
             assoc:'assoc', assocName:'assoc_name', serviceType:'service_type', notes:'notes'
         };
 
@@ -313,6 +328,10 @@ app.put('/api/records/:id', authMiddleware, upload.fields([{ name: 'photo' }, { 
             const { data, under18Count } = collectChildrenData(b, 'kidsBox');
             sets.push('children_data = ?', 'kids_under_18_count = ?');
             vals.push(data ? JSON.stringify(data) : null, under18Count);
+        }
+        if (b.legal_present === 'true') {
+            sets.push('legal_details = ?');
+            vals.push(b.legal === 'yes' ? collectLegalData(b) : null);
         }
 
         sets.push('photo_path = ?', 'document_path = ?');

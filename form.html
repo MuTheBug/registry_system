@@ -134,6 +134,7 @@
             height: 100%;
             object-fit: contain;
             display: none;
+            transform: scale(1.25);
         }
 
         .logo-box .placeholder {
@@ -999,27 +1000,34 @@
 </div>
 
 <!-- ═══════════ 5 - العمل ═══════════ -->
-<div class="section glow-purple" id="sec_employment">
+<div class="section glow-purple" id="sec_employment_breadwinner">
     <div class="sec-head">
         <span class="sec-num">5</span>
         <h3>العمل والمعيل</h3>
     </div>
     <div class="sec-body">
-        <div class="fg">
-            <label><span class="rq">*</span> حالة العمل</label>
-            <div class="pills">
-                <div class="pill p-green"><input type="radio" name="employment" id="emp_y" value="employed" onchange="toggleEmp()"><label for="emp_y">يعمل</label></div>
-                <div class="pill p-red"><input type="radio" name="employment" id="emp_n" value="unemployed" onchange="toggleEmp()"><label for="emp_n">عاطل عن العمل</label></div>
+        <div id="sec_employment_only">
+            <div class="fg">
+                <label><span class="rq">*</span> حالة العمل</label>
+                <div class="pills">
+                    <div class="pill p-green"><input type="radio" name="employment" id="emp_y" value="employed" onchange="toggleEmp()"><label for="emp_y">يعمل</label></div>
+                    <div class="pill p-red"><input type="radio" name="employment" id="emp_n" value="unemployed" onchange="toggleEmp()"><label for="emp_n">عاطل عن العمل</label></div>
+                </div>
+            </div>
+            <div class="cond branch branch-green" id="sec_emp">
+                <div class="g g2">
+                    <div class="fg"><label>المهنة</label><input type="text" name="profession" placeholder="المهنة"></div>
+                    <div class="fg"><label>جهة العمل</label><input type="text" name="employer" placeholder="اختياري"></div>
+                </div>
             </div>
         </div>
-        <div class="cond branch branch-green" id="sec_emp">
+        <div id="sec_breadwinner_only">
+            <div class="divider"></div>
             <div class="g g2">
-                <div class="fg"><label>المهنة</label><input type="text" name="profession" placeholder="المهنة"></div>
-                <div class="fg"><label>جهة العمل</label><input type="text" name="employer" placeholder="اختياري"></div>
+                <div class="fg"><label><span class="rq">*</span> المعيل</label><input type="text" name="breadwinner" placeholder="اسم المعيل"></div>
+                <div class="fg"><label><span class="rq">*</span> عمل المعيل</label><input type="text" name="breadwinnerJob" placeholder="مهنة المعيل"></div>
             </div>
         </div>
-        <div class="divider"></div>
-        <div class="fg"><label><span class="rq">*</span> المعيل</label><input type="text" name="breadwinner" placeholder="من هو المعيل الحالي؟"></div>
     </div>
 </div>
 
@@ -1067,6 +1075,7 @@
                     <option>ابتدائية</option>
                     <option>إعدادية</option>
                     <option>ثانوية</option>
+                    <option>معهد</option>
                     <option>بكالوريوس</option>
                     <option>ماجستير</option>
                     <option>دكتوراه</option>
@@ -1098,7 +1107,15 @@
             </div>
         </div>
         <div class="cond branch branch-amber" id="sec_legal">
-            <div class="fg"><label>تفاصيل المشاكل القانونية</label><textarea name="legalDetails" placeholder="اشرح بالتفصيل..."></textarea></div>
+            <label style="font-weight:700; color:var(--text-label); font-size:0.88em;">أضف المشاكل القانونية واحدة تلو الأخرى:</label>
+            <div class="tags" id="legalTagBox"></div>
+            <div class="add-row">
+                <input type="text" id="legalInp" placeholder="اكتب المشكلة القانونية..."
+                       style="padding:12px 16px; background:var(--bg-input); border:2px solid var(--border); border-radius:12px; color:var(--text); font-family:'Tajawal',sans-serif; font-size:0.95em; outline:none; flex:1;"
+                       onkeypress="if(event.key==='Enter'){event.preventDefault();addLegalTag();}">
+                <button type="button" class="add-btn" onclick="addLegalTag()">+ إضافة</button>
+            </div>
+            <input type="hidden" name="legal_present" id="legalPresent" value="false">
         </div>
     </div>
 </div>
@@ -1222,12 +1239,20 @@ function toggleStatus() {
     if (v === 'survivor') show('sec_survivor');
     else if (v === 'deceased') show('sec_dead');
 
-    // Hide employment section for deceased
-    const empSection = document.getElementById('sec_employment');
-    if (v === 'deceased') {
+    // survivor: show employment, hide breadwinner
+    // enforced/deceased: hide employment, show breadwinner
+    const empSection = document.getElementById('sec_employment_only');
+    const breadSection = document.getElementById('sec_breadwinner_only');
+
+    if (v === 'survivor') {
+        empSection.style.display = 'block';
+        breadSection.style.display = 'none';
+    } else if (v === 'enforced' || v === 'deceased') {
         empSection.style.display = 'none';
+        breadSection.style.display = 'block';
     } else {
-        empSection.style.display = '';
+        empSection.style.display = 'block';
+        breadSection.style.display = 'block';
     }
 }
 
@@ -1267,9 +1292,39 @@ function toggleChronic() {
 }
 
 // LEGAL
+let legalTags = [];
 function toggleLegal() {
     const v = document.querySelector('[name=legal]:checked')?.value;
-    if (v === 'yes') show('sec_legal'); else hide('sec_legal');
+    if (v === 'yes') {
+        show('sec_legal');
+        document.getElementById('legalPresent').value = 'true';
+    } else {
+        hide('sec_legal');
+        document.getElementById('legalPresent').value = 'false';
+        legalTags = []; renderLegalTags();
+    }
+}
+
+function addLegalTag() {
+    const inp = document.getElementById('legalInp');
+    const val = inp.value.trim();
+    if (val && !legalTags.includes(val)) { legalTags.push(val); renderLegalTags(); }
+    inp.value = ''; inp.focus();
+}
+
+function removeLegalTag(i) { legalTags.splice(i, 1); renderLegalTags(); }
+
+function renderLegalTags() {
+    const box = document.getElementById('legalTagBox');
+    box.innerHTML = legalTags.map((t, i) =>
+        `<span class="tag">${t}<span class="x" onclick="removeLegalTag(${i})">✕</span></span>`
+    ).join('');
+
+    // We'll use a hidden input pattern like children data, but simpler:
+    // Actually, server.js expects legalProb_i
+    // I need to update the form to have these hidden inputs
+    // or just let server.js handle it.
+    // Wait, server.js currently uses collectLegalData(b) which looks for legalProb_i
 }
 
 // ASSOC
@@ -1284,7 +1339,7 @@ function toggleEducation() {
     hide('sec_edu_secondary');
     hide('sec_edu_higher');
     if (v === 'ثانوية') show('sec_edu_secondary');
-    else if (['بكالوريوس', 'ماجستير', 'دكتوراه'].includes(v)) show('sec_edu_higher');
+    else if (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(v)) show('sec_edu_higher');
 }
 
 // ══════════════ CHILDREN CARDS ══════════════
@@ -1292,6 +1347,7 @@ function buildKids(boxId, count) {
     const box = document.getElementById(boxId);
     box.innerHTML = '';
     const n = parseInt(count) || 0;
+    const eduOptions = ['أمي', 'ابتدائية', 'إعدادية', 'ثانوية', 'معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'];
     for (let i = 1; i <= n; i++) {
         const uid = boxId + '_' + i;
         box.innerHTML += `
@@ -1304,11 +1360,24 @@ function buildKids(boxId, count) {
                 <div class="fg"><label>العمر</label><input type="number" name="cAge_${uid}" placeholder="العمر" min="0" max="100"></div>
                 <div class="fg">
                     <label>التحصيل العلمي</label>
-                    <select name="cEdu_${uid}">
+                    <select name="cEdu_${uid}" onchange="toggleChildEdu(this, '${uid}')">
                         <option value="">-- اختر --</option>
-                        <option>لا يدرس</option><option>روضة</option><option>ابتدائية</option>
-                        <option>متوسطة</option><option>إعدادية</option><option>جامعة</option><option>خرّيج</option>
+                        ${eduOptions.map(opt => `<option>${opt}</option>`).join('')}
                     </select>
+                </div>
+                <div class="fg" id="cEduTypeBox_${uid}" style="display:none">
+                    <label>نوع الثانوية</label>
+                    <select name="cEduType_${uid}">
+                        <option value="">-- اختر --</option>
+                        <option>علمي</option>
+                        <option>ادبي</option>
+                    </select>
+                </div>
+                <div class="fg" id="cHigherEduBox_${uid}" style="display:none; grid-column: span 2;">
+                    <div class="g g2">
+                        <div class="fg"><label>الاختصاص</label><input type="text" name="cSpec_${uid}" placeholder="الاختصاص"></div>
+                        <div class="fg"><label>الجامعة</label><input type="text" name="cUniv_${uid}" placeholder="الجامعة" value="جامعة اللاذقية"></div>
+                    </div>
                 </div>
                 <div class="fg"><label>المهنة</label><input type="text" name="cJob_${uid}" placeholder="إن وجدت"></div>
                 <div class="fg spanall">
@@ -1326,6 +1395,14 @@ function buildKids(boxId, count) {
             </div>
         </div>`;
     }
+}
+
+function toggleChildEdu(sel, uid) {
+    const v = sel.value;
+    const typeBox = document.getElementById(`cEduTypeBox_${uid}`);
+    const higherBox = document.getElementById(`cHigherEduBox_${uid}`);
+    typeBox.style.display = (v === 'ثانوية') ? 'block' : 'none';
+    higherBox.style.display = (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(v)) ? 'block' : 'none';
 }
 
 function toggleChildHP(sel, detId) {
@@ -1361,6 +1438,7 @@ function resetAll() {
     document.querySelectorAll('.hdet').forEach(e => e.classList.remove('show'));
     ['kidsBox', 'kidsBoxW'].forEach(id => document.getElementById(id).innerHTML = '');
     tags = []; renderTags();
+    legalTags = []; renderLegalTags();
     ['fl_photo', 'fl_doc'].forEach(id => {
         const el = document.getElementById(id);
         el.textContent = id === 'fl_photo' ? '📷 اختر صورة' : '📄 ارفق وثيقة';
@@ -1387,6 +1465,22 @@ function showNotification(msg, type) {
 // ══════════════ SUBMIT ══════════════
 document.getElementById('mainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
+    // Prepare dynamic legal problems for server
+    const legalBox = document.getElementById('sec_legal');
+    // Remove old ones
+    document.querySelectorAll('.legal-hidden-input').forEach(el => el.remove());
+    if (document.querySelector('[name=legal]:checked')?.value === 'yes') {
+        legalTags.forEach((t, i) => {
+            const hi = document.createElement('input');
+            hi.type = 'hidden';
+            hi.name = `legalProb_${i+1}`;
+            hi.value = t;
+            hi.className = 'legal-hidden-input';
+            legalBox.appendChild(hi);
+        });
+    }
+
     const submitBtn = this.querySelector('[type=submit]');
     const origText = submitBtn.innerHTML;
     submitBtn.innerHTML = '⏳ جاري الحفظ...';

@@ -77,7 +77,7 @@
             display: flex; align-items: center; justify-content: center;
             border: 2px solid var(--border); overflow: hidden; flex-shrink: 0;
         }
-        .logo-box img { width: 100%; height: 100%; object-fit: contain; }
+        .logo-box img { width: 100%; height: 100%; object-fit: contain; transform: scale(1.25); }
         .header-text h1 { font-size: 1.5em; font-weight: 900; }
         .header-text h1 .t1 { color: var(--text); }
         .header-text h1 .t2 {
@@ -507,7 +507,7 @@
                 <select id="educationFilter">
                     <option value="">الكل</option>
                     <option>أمّي</option><option>ابتدائية</option>
-                    <option>إعدادية</option><option>ثانوية</option>
+                    <option>إعدادية</option><option>ثانوية</option><option>معهد</option>
                     <option>بكالوريوس</option><option>ماجستير</option>
                     <option>دكتوراه</option>
                 </select>
@@ -811,8 +811,13 @@ async function viewRecord(id) {
                 if (children.length) {
                     html += `<div style="margin-top:10px;font-weight:700;color:var(--accent);font-size:0.9em;">الأولاد (${children.length}):</div>`;
                     children.forEach((c, i) => {
+                        let cEduStr = c.education || '—';
+                        if (c.eduType) cEduStr += ` (${c.eduType})`;
+                        if (c.specialization) cEduStr += ` - ${c.specialization}`;
+                        if (c.university) cEduStr += ` (${c.university})`;
+
                         html += `<div style="padding:6px 12px;margin:4px 0;background:var(--bg-input);border-radius:8px;font-size:0.88em;">
-                            <strong>${i+1}.</strong> ${c.name || '—'} | العمر: ${c.age || '—'} | التعليم: ${c.education || '—'} | المهنة: ${c.job || '—'}
+                            <strong>${i+1}.</strong> ${esc(c.name) || '—'} | العمر: ${c.age || '—'} | التعليم: ${esc(cEduStr)} | المهنة: ${esc(c.job) || '—'}
                         </div>`;
                     });
                 }
@@ -837,20 +842,31 @@ async function viewRecord(id) {
 
         // Work, Health, Education
         html += `<div class="detail-section-title">العمل والصحة والتعليم</div>`;
-        if (r.status !== 'deceased') {
+        if (r.status === 'survivor') {
             html += detailRow('حالة العمل', r.employment === 'employed' ? 'يعمل' : (r.employment === 'unemployed' ? 'عاطل عن العمل' : '—'));
             if (r.profession) html += detailRow('المهنة', r.profession);
             if (r.employer) html += detailRow('جهة العمل', r.employer);
+        } else {
+            html += detailRow('المعيل', esc(r.breadwinner));
+            html += detailRow('عمل المعيل', esc(r.breadwinner_job));
         }
-        html += detailRow('المعيل', r.breadwinner);
         html += detailRow('أمراض مزمنة', r.chronic === 'yes' ? (r.diseases || 'نعم') : 'لا يوجد');
         html += detailRow('التحصيل الدراسي', esc(r.education));
         if (r.education === 'ثانوية') html += detailRow('نوع الثانوية', esc(r.edu_type));
-        if (['بكالوريوس', 'ماجستير', 'دكتوراه'].includes(r.education)) {
+        if (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(r.education)) {
             html += detailRow('الاختصاص', esc(r.edu_specialization));
             html += detailRow('الجامعة', esc(r.edu_university));
         }
-        html += detailRow('مشاكل قانونية', r.legal === 'yes' ? (esc(r.legal_details) || 'نعم') : 'لا');
+        if (r.legal === 'yes') {
+            let legStr = 'نعم';
+            try {
+                const probs = JSON.parse(r.legal_details);
+                if (Array.isArray(probs)) legStr = probs.map(p => `• ${esc(p)}`).join('<br>');
+            } catch(e) { legStr = esc(r.legal_details); }
+            html += detailRow('مشاكل قانونية', legStr);
+        } else {
+            html += detailRow('مشاكل قانونية', 'لا');
+        }
 
         // Associations
         if (r.assoc === 'yes') {
@@ -961,6 +977,12 @@ async function editRecord(id) {
                 <div class="filter-group"><label>عدد الأولاد تحت 18</label><input type="number" name="kids_under_18_count" value="${r.kids_under_18_count||0}"></div>
             </div>
 
+            <div class="detail-section-title">المعيل (في حال التغيب أو الوفاة)</div>
+            <div class="adv-grid">
+                <div class="filter-group"><label>المعيل</label><input name="breadwinner" value="${esc(r.breadwinner)}"></div>
+                <div class="filter-group"><label>عمل المعيل</label><input name="breadwinnerJob" value="${esc(r.breadwinner_job)}"></div>
+            </div>
+
             <div class="detail-section-title">التعليم</div>
             <div class="adv-grid">
                 <div class="filter-group">
@@ -970,6 +992,7 @@ async function editRecord(id) {
                         <option ${r.education==='ابتدائية'?'selected':''}>ابتدائية</option>
                         <option ${r.education==='إعدادية'?'selected':''}>إعدادية</option>
                         <option ${r.education==='ثانوية'?'selected':''}>ثانوية</option>
+                        <option ${r.education==='معهد'?'selected':''}>معهد</option>
                         <option ${r.education==='بكالوريوس'?'selected':''}>بكالوريوس</option>
                         <option ${r.education==='ماجستير'?'selected':''}>ماجستير</option>
                         <option ${r.education==='دكتوراه'?'selected':''}>دكتوراه</option>
@@ -984,9 +1007,19 @@ async function editRecord(id) {
                     </select>
                 </div>
             </div>
-            <div class="adv-grid" id="edit_higher_edu_box" style="display:${['بكالوريوس','ماجستير','دكتوراه'].includes(r.education)?'flex':'none'}">
+            <div class="adv-grid" id="edit_higher_edu_box" style="display:${['معهد', 'بكالوريوس','ماجستير','دكتوراه'].includes(r.education)?'flex':'none'}">
                 <div class="filter-group"><label>الاختصاص</label><input name="eduSpecialization" value="${esc(r.edu_specialization)}"></div>
                 <div class="filter-group"><label>الجامعة</label><input name="eduUniversity" value="${esc(r.edu_university)}"></div>
+            </div>
+
+            <div class="detail-section-title">بيانات متقدمة (JSON)</div>
+            <div class="filter-group">
+                <label>بيانات الأطفال</label>
+                <textarea name="children_data" rows="5" style="font-family:monospace; font-size:0.85em; background:var(--bg-input); color:var(--text); border:2px solid var(--border); border-radius:12px; padding:12px;">${esc(r.children_data)}</textarea>
+            </div>
+            <div class="filter-group">
+                <label>المشاكل القانونية</label>
+                <textarea name="legal_details" rows="3" style="font-family:monospace; font-size:0.85em; background:var(--bg-input); color:var(--text); border:2px solid var(--border); border-radius:12px; padding:12px;">${esc(r.legal_details)}</textarea>
             </div>
 
             <div style="margin-top:20px; display:flex; gap:10px;">
@@ -1003,7 +1036,7 @@ async function editRecord(id) {
 function toggleEditEdu() {
     const v = document.getElementById('edit_edu').value;
     document.getElementById('edit_edu_type_box').style.display = (v === 'ثانوية') ? 'block' : 'none';
-    document.getElementById('edit_higher_edu_box').style.display = (['بكالوريوس','ماجستير','دكتوراه'].includes(v)) ? 'flex' : 'none';
+    document.getElementById('edit_higher_edu_box').style.display = (['معهد', 'بكالوريوس','ماجستير','دكتوراه'].includes(v)) ? 'flex' : 'none';
 }
 
 async function saveEdit(e) {
