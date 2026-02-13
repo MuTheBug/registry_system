@@ -789,7 +789,7 @@
                 </select>
             </div>
             <div class="fg"><label><span class="rq">*</span> الرقم الوطني</label><input type="text" name="nationalId" placeholder="الرقم الوطني" required></div>
-            <div class="fg"><label>رقم التواصل</label><input type="tel" name="phone" placeholder="07XXXXXXXXX"></div>
+            <div class="fg"><label>رقم التواصل</label><input type="tel" name="phone" placeholder="+9639XXXXXXXXXX"></div>
         </div>
 
         <div class="g g3" style="margin-top:18px;">
@@ -840,19 +840,19 @@
                 <label><span class="rq">*</span> مكان الاعتقال</label>
                 <select name="arrestPlace" onchange="toggleOther(this, 'otherArrestPlace')" required>
                     <option value="">اختر المكان</option>
-                    <option value="صيدنايا الامني (الاحمر)">0 - صيدنايا الامني (الاحمر)</option>
-                    <option value="صيدنايا القضائي (الابيض)">01- صيدنايا القضائي (الابيض)</option>
-                    <option value="الفرع 235 فرع فلسطين">a - الفرع 235 فرع فلسطين</option>
-                    <option value="فرع 248، التحقيق العسكري">b- فرع 248، التحقيق العسكري</option>
-                    <option value="فرع 215، بسرية المداهمة والاقتحام">c- فرع 215، بسرية المداهمة والاقتحام</option>
-                    <option value="فرع 251، فرع الخطيب">d- فرع 251، فرع الخطيب</option>
-                    <option value="فرع 216، فرع الدوريات">e- فرع 216، فرع الدوريات</option>
-                    <option value="فرع 227، فرع المنطقة">f- فرع 227، فرع المنطقة</option>
-                    <option value="فرع 285، فرع التحقيق">g- فرع 285، فرع التحقيق</option>
-                    <option value="فرع 295، مكافحة الإرهاب">h- فرع 295، مكافحة الإرهاب</option>
-                    <option value="الدفاع الوطني">i- الدفاع الوطني</option>
-                    <option value="السجن المدني">j- السجن المدني</option>
-                    <option value="others">k- اخرى</option>
+                    <option value="صيدنايا الامني (الاحمر)">صيدنايا الامني (الاحمر)</option>
+                    <option value="صيدنايا القضائي (الابيض)">صيدنايا القضائي (الابيض)</option>
+                    <option value="الفرع 235 فرع فلسطين">الفرع 235 فرع فلسطين</option>
+                    <option value="فرع 248، التحقيق العسكري">فرع 248، التحقيق العسكري</option>
+                    <option value="فرع 215، بسرية المداهمة والاقتحام">فرع 215، بسرية المداهمة والاقتحام</option>
+                    <option value="فرع 251، فرع الخطيب">فرع 251، فرع الخطيب</option>
+                    <option value="فرع 216، فرع الدوريات">فرع 216، فرع الدوريات</option>
+                    <option value="فرع 227، فرع المنطقة">فرع 227، فرع المنطقة</option>
+                    <option value="فرع 285، فرع التحقيق">فرع 285، فرع التحقيق</option>
+                    <option value="فرع 295، مكافحة الإرهاب">فرع 295، مكافحة الإرهاب</option>
+                    <option value="الدفاع الوطني">الدفاع الوطني</option>
+                    <option value="السجن المدني">السجن المدني</option>
+                    <option value="others">اخرى</option>
                 </select>
                 <input type="text" id="otherArrestPlace" placeholder="حدد المكان الآخر" style="display:none; margin-top:5px;">
             </div>
@@ -901,6 +901,15 @@
             </div>
         </div>
 
+        <div class="cond branch" id="sec_official_registration" style="margin-top:15px; border-right-color:var(--amber);">
+            <div class="fg">
+                <div class="pill p-amber">
+                    <input type="checkbox" name="isOfficiallyRegistered" id="is_official" value="yes">
+                    <label for="is_official">📝 تم التوثيق رسمياً (شهادة وفاة / بلاغ رسمي)</label>
+                </div>
+            </div>
+        </div>
+
         <!-- ← متوفى (فقط تاريخ الوفاة - بدون تاريخ خروج) -->
         <div class="cond branch branch-red" id="sec_dead">
             <div class="g g2">
@@ -916,19 +925,19 @@
                     <label>مكان الوفاة</label>
                     <select name="deathPlace" onchange="toggleOther(this, 'otherDeathPlace')">
                         <option value="">اختر المكان</option>
-                        <option value="صيدنايا الامني (الاحمر)">0 - صيدنايا الامني (الاحمر)</option>
-                        <option value="صيدنايا القضائي (الابيض)">01- صيدنايا القضائي (الابيض)</option>
-                        <option value="الفرع 235 فرع فلسطين">a - الفرع 235 فرع فلسطين</option>
-                        <option value="فرع 248، التحقيق العسكري">b- فرع 248، التحقيق العسكري</option>
-                        <option value="فرع 215، بسرية المداهمة والاقتحام">c- فرع 215، بسرية المداهمة والاقتحام</option>
-                        <option value="فرع 251، فرع الخطيب">d- فرع 251، فرع الخطيب</option>
-                        <option value="فرع 216، فرع الدوريات">e- فرع 216، فرع الدوريات</option>
-                        <option value="فرع 227، فرع المنطقة">f- فرع 227، فرع المنطقة</option>
-                        <option value="فرع 285، فرع التحقيق">g- فرع 285، فرع التحقيق</option>
-                        <option value="فرع 295، مكافحة الإرهاب">h- فرع 295، مكافحة الإرهاب</option>
-                        <option value="الدفاع الوطني">i- الدفاع الوطني</option>
-                        <option value="السجن المدني">j- السجن المدني</option>
-                        <option value="others">k- اخرى</option>
+                        <option value="صيدنايا الامني (الاحمر)">صيدنايا الامني (الاحمر)</option>
+                        <option value="صيدنايا القضائي (الابيض)">صيدنايا القضائي (الابيض)</option>
+                        <option value="الفرع 235 فرع فلسطين">الفرع 235 فرع فلسطين</option>
+                        <option value="فرع 248، التحقيق العسكري">فرع 248، التحقيق العسكري</option>
+                        <option value="فرع 215، بسرية المداهمة والاقتحام">فرع 215، بسرية المداهمة والاقتحام</option>
+                        <option value="فرع 251، فرع الخطيب">فرع 251، فرع الخطيب</option>
+                        <option value="فرع 216، فرع الدوريات">فرع 216، فرع الدوريات</option>
+                        <option value="فرع 227، فرع المنطقة">فرع 227، فرع المنطقة</option>
+                        <option value="فرع 285، فرع التحقيق">فرع 285، فرع التحقيق</option>
+                        <option value="فرع 295، مكافحة الإرهاب">فرع 295، مكافحة الإرهاب</option>
+                        <option value="الدفاع الوطني">الدفاع الوطني</option>
+                        <option value="السجن المدني">السجن المدني</option>
+                        <option value="others">اخرى</option>
                     </select>
                     <input type="text" id="otherDeathPlace" placeholder="حدد المكان الآخر" style="display:none; margin-top:5px;">
                 </div>
@@ -1029,10 +1038,18 @@
             <div class="fg spanall"><label><span class="rq">*</span> العنوان الحالي</label><input type="text" name="address" placeholder="العنوان التفصيلي" required></div>
             <div class="fg">
                 <label><span class="rq">*</span> نوع السكن</label>
-                <select name="housingType" required>
+                <select name="housingType" required onchange="toggleHousing()">
                     <option value="">-- اختر --</option>
-                    <option>ملك</option><option>إيجار</option><option>رهن</option><option>مستضاف</option><option>أخرى</option>
+                    <option value="ملك">ملك</option>
+                    <option value="إيجار">إيجار</option>
+                    <option value="رهن">رهن</option>
+                    <option value="مستضاف">مستضاف</option>
+                    <option value="أخرى">أخرى</option>
                 </select>
+            </div>
+            <div class="fg cond" id="sec_rent">
+                <label>مبلغ الإيجار (اختياري)</label>
+                <input type="text" name="rentAmount" placeholder="مثلاً: 500,000 ل.س">
             </div>
         </div>
     </div>
@@ -1085,15 +1102,24 @@
             </div>
         </div>
         <div class="cond branch branch-red" id="sec_chronic">
-            <label style="font-weight:700; color:var(--text-label); font-size:0.88em;">أضف الأمراض:</label>
-            <div class="tags" id="tagBox"></div>
-            <div class="add-row">
-                <input type="text" id="diseaseInp" placeholder="اكتب اسم المرض..."
-                       style="padding:12px 16px; background:var(--bg-input); border:2px solid var(--border); border-radius:12px; color:var(--text); font-family:'Tajawal',sans-serif; font-size:0.95em; outline:none; flex:1;"
-                       onkeypress="if(event.key==='Enter'){event.preventDefault();addTag();}">
-                <button type="button" class="add-btn" onclick="addTag()">+ إضافة</button>
+            <div class="g g2">
+                <div class="fg">
+                    <div class="pills" style="flex-direction: row; gap: 15px;">
+                        <div class="pill">
+                            <input type="checkbox" name="hasHypertension" id="ch_hyp" value="yes">
+                            <label for="ch_hyp">🩸 ارتفاع ضغط الدم</label>
+                        </div>
+                        <div class="pill">
+                            <input type="checkbox" name="hasDiabetes" id="ch_dia" value="yes">
+                            <label for="ch_dia">🍬 السكري</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="fg">
+                    <label>أمراض أخرى</label>
+                    <input type="text" name="otherDiseases" placeholder="اذكر الأمراض الأخرى إن وجدت">
+                </div>
             </div>
-            <input type="hidden" name="diseases" id="diseasesHidden">
         </div>
     </div>
 </div>
@@ -1274,9 +1300,10 @@ function hide(id) { document.getElementById(id).classList.remove('show'); }
 // STATUS
 function toggleStatus() {
     const v = document.querySelector('[name=status]:checked')?.value;
-    hide('sec_survivor'); hide('sec_dead');
+    hide('sec_survivor'); hide('sec_dead'); hide('sec_official_registration');
     if (v === 'survivor') show('sec_survivor');
-    else if (v === 'deceased') show('sec_dead');
+    else if (v === 'deceased') { show('sec_dead'); show('sec_official_registration'); }
+    else if (v === 'enforced') { show('sec_official_registration'); }
 
     // survivor: show employment, hide breadwinner
     // enforced/deceased: hide employment, show breadwinner
@@ -1323,11 +1350,22 @@ function toggleEmp() {
     if (v === 'employed') show('sec_emp'); else hide('sec_emp');
 }
 
+// HOUSING
+function toggleHousing() {
+    const v = document.querySelector('[name=housingType]').value;
+    if (v === 'إيجار') show('sec_rent'); else hide('sec_rent');
+}
+
 // CHRONIC
 function toggleChronic() {
     const v = document.querySelector('[name=chronic]:checked')?.value;
     if (v === 'yes') show('sec_chronic');
-    else { hide('sec_chronic'); tags = []; renderTags(); }
+    else {
+        hide('sec_chronic');
+        document.getElementById('ch_hyp').checked = false;
+        document.getElementById('ch_dia').checked = false;
+        document.querySelector('[name=otherDiseases]').value = '';
+    }
 }
 
 // LEGAL
@@ -1460,25 +1498,6 @@ function toggleChildHP(sel, detId) {
     else el.classList.remove('show');
 }
 
-// ══════════════ DISEASE TAGS ══════════════
-let tags = [];
-
-function addTag() {
-    const inp = document.getElementById('diseaseInp');
-    const val = inp.value.trim();
-    if (val && !tags.includes(val)) { tags.push(val); renderTags(); }
-    inp.value = ''; inp.focus();
-}
-
-function removeTag(i) { tags.splice(i, 1); renderTags(); }
-
-function renderTags() {
-    document.getElementById('tagBox').innerHTML = tags.map((t, i) =>
-        `<span class="tag">${t}<span class="x" onclick="removeTag(${i})">✕</span></span>`
-    ).join('');
-    document.getElementById('diseasesHidden').value = tags.join('، ');
-}
-
 // ══════════════ RESET ══════════════
 function resetAll() {
     if (!confirm('هل أنت متأكد من إعادة تعيين جميع البيانات؟')) return;
@@ -1486,7 +1505,6 @@ function resetAll() {
     document.querySelectorAll('.cond').forEach(e => e.classList.remove('show'));
     document.querySelectorAll('.hdet').forEach(e => e.classList.remove('show'));
     ['kidsBox', 'kidsBoxW'].forEach(id => document.getElementById(id).innerHTML = '');
-    tags = []; renderTags();
     legalTags = []; renderLegalTags();
     ['fl_photo', 'fl_doc'].forEach(id => {
         const el = document.getElementById(id);
@@ -1553,8 +1571,11 @@ document.getElementById('mainForm').addEventListener('submit', async function(e)
         if (fd.get('deathPlace') === 'others') {
             fd.set('deathPlace', document.getElementById('otherDeathPlace').value);
         }
-        // Add disease tags
-        fd.set('diseases', tags.join('، '));
+
+        // Handle checkboxes for FormData (standard FormData includes them if checked)
+        // If not checked, they aren't in FD. We might want to ensure they are sent as 'no' or 0 if needed,
+        // but our server handles missing as null/0.
+        // Actually, FD works fine for checked checkboxes.
 
         const resp = await fetch('/api/records', {
             method: 'POST',

@@ -844,8 +844,12 @@ async function viewRecord(id) {
         html += detailRow('السبب', r.arrest_reason);
         html += detailRow('المُسبِّب', r.arrest_causer);
         html += detailRow('الحالة', statusLabel(r.status));
+        html += detailRow('مسجل رسمياً', r.is_officially_registered ? '<span style="color:var(--green)">نعم</span>' : '<span style="color:var(--text-dim)">لا</span>');
         if (r.status === 'survivor') html += detailRow('تاريخ الخروج', formatDate(r.release_day, r.release_month, r.release_year));
-        if (r.status === 'deceased') html += detailRow('تاريخ الوفاة', formatDate(r.death_day, r.death_month, r.death_year));
+        if (r.status === 'deceased') {
+            html += detailRow('تاريخ الوفاة', formatDate(r.death_day, r.death_month, r.death_year));
+            html += detailRow('مكان الوفاة', r.death_place);
+        }
 
         // Social & Housing
         html += `<div class="detail-section-title">الحالة الاجتماعية والسكن</div>`;
@@ -892,6 +896,7 @@ async function viewRecord(id) {
 
         html += detailRow('العنوان', r.address);
         html += detailRow('نوع السكن', r.housing_type);
+        if (r.housing_type === 'إيجار' && r.rent_amount) html += detailRow('مبلغ الإيجار', r.rent_amount);
 
         // Work, Health, Education
         html += `<div class="detail-section-title">العمل والصحة والتعليم</div>`;
@@ -903,7 +908,12 @@ async function viewRecord(id) {
             html += detailRow('المعيل', esc(r.breadwinner));
             html += detailRow('عمل المعيل', esc(r.breadwinner_job));
         }
-        html += detailRow('أمراض مزمنة', r.chronic === 'yes' ? (r.diseases || 'نعم') : 'لا يوجد');
+        let diseaseList = [];
+        if (r.has_hypertension) diseaseList.push('ضغط');
+        if (r.has_diabetes) diseaseList.push('سكري');
+        if (r.other_diseases) diseaseList.push(esc(r.other_diseases));
+
+        html += detailRow('أمراض مزمنة', diseaseList.length > 0 ? diseaseList.join('، ') : 'لا يوجد');
         html += detailRow('التحصيل الدراسي', esc(r.education));
         if (r.education === 'ثانوية') html += detailRow('نوع الثانوية', esc(r.edu_type));
         if (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(r.education)) {
@@ -1041,13 +1051,34 @@ async function editRecord(id) {
                 <div class="filter-group"><label>مكان الوفاة</label>
                     <input list="arrestPlaces" name="deathPlace" value="${esc(r.death_place||'')}">
                 </div>
+                <div class="filter-group">
+                    <label>مسجل رسمياً</label>
+                    <select name="isOfficiallyRegistered">
+                        <option value="0" ${!r.is_officially_registered?'selected':''}>لا</option>
+                        <option value="1" ${r.is_officially_registered?'selected':''}>نعم</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="detail-section-title">العائلة والأولاد</div>
+            <div class="detail-section-title">العائلة والأولاد والسكن</div>
             <div class="adv-grid">
                 <div class="filter-group"><label>عدد الأولاد (من الزواج الحالي)</label><input type="number" name="kidsCount" value="${r.kids_count||0}"></div>
                 <div class="filter-group"><label>عدد الأولاد (من زواج سابق)</label><input type="number" name="kidsCountW" value="${r.kids_count_w||0}"></div>
                 <div class="filter-group"><label>عدد الأولاد تحت 18</label><input type="number" name="kids_under_18_count" value="${r.kids_under_18_count||0}"></div>
+            </div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>نوع السكن</label>
+                    <select name="housingType" onchange="const ra = this.parentElement.nextElementSibling; if(this.value==='إيجار') ra.style.display='block'; else ra.style.display='none';">
+                        <option ${r.housing_type==='ملك'?'selected':''}>ملك</option>
+                        <option ${r.housing_type==='إيجار'?'selected':''}>إيجار</option>
+                        <option ${r.housing_type==='أخرى'?'selected':''}>أخرى</option>
+                    </select>
+                </div>
+                <div class="filter-group" style="display:${r.housing_type==='إيجار'?'block':'none'}">
+                    <label>مبلغ الإيجار</label>
+                    <input name="rentAmount" value="${esc(r.rent_amount||'')}">
+                </div>
             </div>
 
             <div class="detail-section-title">المعيل (في حال التغيب أو الوفاة)</div>
@@ -1056,7 +1087,24 @@ async function editRecord(id) {
                 <div class="filter-group"><label>عمل المعيل</label><input name="breadwinnerJob" value="${esc(r.breadwinner_job)}"></div>
             </div>
 
-            <div class="detail-section-title">التعليم</div>
+            <div class="detail-section-title">الصحة والتعليم</div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>أمراض مزمنة</label>
+                    <div style="display:flex; gap:10px; margin-top:8px;">
+                        <label style="color:var(--text); font-size:0.85em; display:flex; align-items:center; gap:4px;">
+                            <input type="checkbox" name="hasHypertension" value="1" ${r.has_hypertension?'checked':''}> ضغط
+                        </label>
+                        <label style="color:var(--text); font-size:0.85em; display:flex; align-items:center; gap:4px;">
+                            <input type="checkbox" name="hasDiabetes" value="1" ${r.has_diabetes?'checked':''}> سكري
+                        </label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>أمراض أخرى</label>
+                    <input name="otherDiseases" value="${esc(r.other_diseases||'')}">
+                </div>
+            </div>
             <div class="adv-grid">
                 <div class="filter-group">
                     <label>التحصيل الدراسي</label>
@@ -1117,6 +1165,10 @@ async function saveEdit(e) {
     const formData = new FormData(e.target);
     const data = {};
     formData.forEach((value, key) => { data[key] = value; });
+
+    // Ensure checkboxes are included
+    if (!data.hasHypertension) data.hasHypertension = 0;
+    if (!data.hasDiabetes) data.hasDiabetes = 0;
 
     try {
         const res = await fetch('/api/records/' + currentRecordId, {

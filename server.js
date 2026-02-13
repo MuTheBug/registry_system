@@ -78,6 +78,11 @@ function initDbSchema() {
             edu_specialization TEXT,
             edu_university TEXT,
             kids_under_18_count INTEGER DEFAULT 0,
+            rent_amount TEXT,
+            has_hypertension INTEGER,
+            has_diabetes INTEGER,
+            other_diseases TEXT,
+            is_officially_registered INTEGER,
             legal TEXT,
             legal_details TEXT,
             assoc TEXT,
@@ -92,7 +97,12 @@ function initDbSchema() {
         { name: 'edu_university', type: 'TEXT' },
         { name: 'kids_under_18_count', type: 'INTEGER DEFAULT 0' },
         { name: 'breadwinner_job', type: 'TEXT' },
-        { name: 'death_place', type: 'TEXT' }
+        { name: 'death_place', type: 'TEXT' },
+        { name: 'rent_amount', type: 'TEXT' },
+        { name: 'has_hypertension', type: 'INTEGER' },
+        { name: 'has_diabetes', type: 'INTEGER' },
+        { name: 'other_diseases', type: 'TEXT' },
+        { name: 'is_officially_registered', type: 'INTEGER' }
     ];
     for (const col of columnsToAdd) {
         try { db.exec(`ALTER TABLE records ADD COLUMN ${col.name} ${col.type}`); } catch (err) {}
@@ -211,14 +221,16 @@ app.post('/api/records', upload.fields([
                 kids_under_18_count, address, housing_type, employment,
                 profession, employer, breadwinner, chronic, diseases,
                 education, edu_type, edu_specialization, edu_university,
-                legal, legal_details, assoc, assoc_name, service_type, notes, breadwinner_job
+                legal, legal_details, assoc, assoc_name, service_type, notes, breadwinner_job,
+                rent_amount, has_hypertension, has_diabetes, other_diseases, is_officially_registered
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?, ?, ?, ?, ?
             )
         `);
 
@@ -238,7 +250,8 @@ app.post('/api/records', upload.fields([
             b.employer || null, b.breadwinner || null, b.chronic || null, b.diseases || null,
             b.education || null, b.eduType || null, b.eduSpecialization || null, b.eduUniversity || null,
             b.legal || null, b.legal === 'yes' ? collectLegalData(b) : null, b.assoc || null, b.assocName || null,
-            b.serviceType || null, b.notes || null, b.breadwinnerJob || null
+            b.serviceType || null, b.notes || null, b.breadwinnerJob || null,
+            b.rentAmount || null, b.hasHypertension === 'yes' ? 1 : 0, b.hasDiabetes === 'yes' ? 1 : 0, b.otherDiseases || null, b.isOfficiallyRegistered === 'yes' ? 1 : 0
         );
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) {
@@ -332,13 +345,19 @@ app.put('/api/records/:id', authMiddleware, upload.fields([{ name: 'photo' }, { 
             education:'education', eduType:'edu_type', eduSpecialization:'edu_specialization',
             eduUniversity:'edu_university', legal:'legal', legal_details:'legal_details', deathPlace:'death_place',
             children_data:'children_data', children_data_w:'children_data_w',
-            assoc:'assoc', assocName:'assoc_name', serviceType:'service_type', notes:'notes'
+            assoc:'assoc', assocName:'assoc_name', serviceType:'service_type', notes:'notes',
+            rentAmount:'rent_amount', hasHypertension:'has_hypertension', hasDiabetes:'has_diabetes',
+            otherDiseases:'other_diseases', isOfficiallyRegistered:'is_officially_registered'
         };
 
         const sets = [];
         const vals = [];
         for (const [bk, col] of Object.entries(map)) {
-            if (b[bk] !== undefined) { sets.push(`${col} = ?`); vals.push(b[bk] || null); }
+            if (b[bk] !== undefined) {
+                sets.push(`${col} = ?`);
+                const val = (b[bk] === 0 || b[bk] === '0') ? 0 : (b[bk] || null);
+                vals.push(val);
+            }
         }
 
         if (b.kidsBox_present === 'true') {
