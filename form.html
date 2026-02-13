@@ -1103,7 +1103,7 @@
         </div>
         <div class="cond branch branch-red" id="sec_chronic">
             <div class="g g2">
-                <div class="fg">
+                <div class="fg spanall">
                     <div class="pills" style="flex-direction: row; gap: 15px;">
                         <div class="pill">
                             <input type="checkbox" name="hasHypertension" id="ch_hyp" value="yes">
@@ -1115,10 +1115,35 @@
                         </div>
                     </div>
                 </div>
-                <div class="fg">
-                    <label>أمراض أخرى</label>
-                    <input type="text" name="otherDiseases" placeholder="اذكر الأمراض الأخرى إن وجدت">
+                <div class="fg spanall mt-3">
+                    <label>أمراض أخرى (أدخل كل مرض واضغط إضافة):</label>
+                    <div class="tags" id="otherDiseasesTags"></div>
+                    <div class="add-row">
+                        <input type="text" id="otherDiseaseInp" placeholder="اكتب اسم المرض..."
+                               style="padding:12px 16px; background:var(--bg-input); border:2px solid var(--border); border-radius:12px; color:var(--text); font-family:'Tajawal',sans-serif; font-size:0.95em; outline:none; flex:1;"
+                               onkeypress="if(event.key==='Enter'){event.preventDefault();addOtherDiseaseTag();}">
+                        <button type="button" class="add-btn" onclick="addOtherDiseaseTag()">+ إضافة</button>
+                    </div>
+                    <input type="hidden" name="otherDiseases" id="otherDiseasesVal">
                 </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="fg">
+            <label>ذوي الاحتياجات الخاصة</label>
+            <div class="pills">
+                <div class="pill p-amber">
+                    <input type="checkbox" name="hasSpecialNeeds" id="sn_y" value="yes" onchange="toggleSpecialNeeds()">
+                    <label for="sn_y">♿ من ذوي الاحتياجات الخاصة</label>
+                </div>
+            </div>
+        </div>
+        <div class="cond branch branch-amber" id="sec_special_needs">
+            <div class="fg">
+                <label>تفاصيل الحالة / الاحتياجات</label>
+                <textarea name="specialNeedsDetails" placeholder="يرجى توضيح طبيعة الإعاقة أو الاحتياج..."></textarea>
             </div>
         </div>
     </div>
@@ -1364,8 +1389,37 @@ function toggleChronic() {
         hide('sec_chronic');
         document.getElementById('ch_hyp').checked = false;
         document.getElementById('ch_dia').checked = false;
-        document.querySelector('[name=otherDiseases]').value = '';
+        otherDiseasesList = []; renderOtherDiseaseTags();
     }
+}
+
+function toggleSpecialNeeds() {
+    const chk = document.getElementById('sn_y');
+    if (chk.checked) show('sec_special_needs');
+    else hide('sec_special_needs');
+}
+
+let otherDiseasesList = [];
+function addOtherDiseaseTag() {
+    const inp = document.getElementById('otherDiseaseInp');
+    const val = inp.value.trim();
+    if (val && !otherDiseasesList.includes(val)) {
+        otherDiseasesList.push(val);
+        renderOtherDiseaseTags();
+    }
+    inp.value = ''; inp.focus();
+}
+function removeOtherDiseaseTag(i) {
+    otherDiseasesList.splice(i, 1);
+    renderOtherDiseaseTags();
+}
+function renderOtherDiseaseTags() {
+    const box = document.getElementById('otherDiseasesTags');
+    const hidden = document.getElementById('otherDiseasesVal');
+    box.innerHTML = otherDiseasesList.map((t, i) =>
+        `<span class="tag">${t}<span class="x" onclick="removeOtherDiseaseTag(${i})">✕</span></span>`
+    ).join('');
+    hidden.value = JSON.stringify(otherDiseasesList);
 }
 
 // LEGAL
@@ -1469,15 +1523,27 @@ function buildKids(boxId, count) {
                 <div class="fg"><label>المهنة</label><input type="text" name="cJob_${uid}" placeholder="إن وجدت"></div>
                 <div class="fg spanall">
                     <label>الحالة الصحية</label>
-                    <select name="cHP_${uid}" onchange="toggleChildHP(this,'chd_${uid}')">
+                    <select name="cHP_${uid}" onchange="toggleChildHP(this, '${uid}')">
                         <option value="">-- اختر --</option>
                         <option value="healthy">سليم</option>
+                        <option value="sick">مريض</option>
                         <option value="special">ذوي احتياجات خاصة</option>
                     </select>
                 </div>
-                <div class="fg spanall hdet" id="chd_${uid}">
-                    <label>تفاصيل الحالة / نوع الاحتياج</label>
-                    <textarea name="cHPD_${uid}" placeholder="اشرح..."></textarea>
+                <div class="fg spanall cond branch branch-red" id="cSickBox_${uid}">
+                    <label style="font-weight:700; color:var(--text-label); font-size:0.88em;">الأمراض (أضف كل مرض على حدة):</label>
+                    <div class="tags" id="cDiseasesTags_${uid}"></div>
+                    <div class="add-row">
+                        <input type="text" id="cDiseaseInp_${uid}" placeholder="اكتب اسم المرض..."
+                               style="padding:10px 14px; background:var(--bg-input); border:2px solid var(--border); border-radius:10px; color:var(--text); font-family:'Tajawal',sans-serif; font-size:0.9em; outline:none; flex:1;"
+                               onkeypress="if(event.key==='Enter'){event.preventDefault();addChildDisease('${uid}');}">
+                        <button type="button" class="add-btn" style="padding:8px 16px;" onclick="addChildDisease('${uid}')">+ إضافة</button>
+                    </div>
+                    <input type="hidden" name="cDiseases_${uid}" id="cDiseasesVal_${uid}">
+                </div>
+                <div class="fg spanall cond branch branch-amber" id="cSpecialBox_${uid}">
+                    <label>شرح الحالة / نوع الاحتياج</label>
+                    <textarea name="cHPD_${uid}" placeholder="اشرح حالة ذوي الاحتياجات الخاصة..."></textarea>
                 </div>
             </div>
         </div>`;
@@ -1492,10 +1558,47 @@ function toggleChildEdu(sel, uid) {
     higherBox.style.display = (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(v)) ? 'block' : 'none';
 }
 
-function toggleChildHP(sel, detId) {
-    const el = document.getElementById(detId);
-    if (sel.value === 'special') el.classList.add('show');
-    else el.classList.remove('show');
+function toggleChildHP(sel, uid) {
+    const sickBox = document.getElementById(`cSickBox_${uid}`);
+    const specialBox = document.getElementById(`cSpecialBox_${uid}`);
+    sickBox.classList.remove('show');
+    specialBox.classList.remove('show');
+
+    if (sel.value === 'sick') sickBox.classList.add('show');
+    else if (sel.value === 'special') specialBox.classList.add('show');
+}
+
+let childDiseases = {};
+
+function addChildDisease(uid) {
+    const inp = document.getElementById(`cDiseaseInp_${uid}`);
+    const val = inp.value.trim();
+    if (!val) return;
+
+    if (!childDiseases[uid]) childDiseases[uid] = [];
+    if (!childDiseases[uid].includes(val)) {
+        childDiseases[uid].push(val);
+        renderChildDiseases(uid);
+    }
+    inp.value = '';
+    inp.focus();
+}
+
+function removeChildDisease(uid, idx) {
+    childDiseases[uid].splice(idx, 1);
+    renderChildDiseases(uid);
+}
+
+function renderChildDiseases(uid) {
+    const box = document.getElementById(`cDiseasesTags_${uid}`);
+    const hiddenInp = document.getElementById(`cDiseasesVal_${uid}`);
+    const tags = childDiseases[uid] || [];
+
+    box.innerHTML = tags.map((t, i) =>
+        `<span class="tag">${t}<span class="x" onclick="removeChildDisease('${uid}', ${i})">✕</span></span>`
+    ).join('');
+
+    hiddenInp.value = JSON.stringify(tags);
 }
 
 // ══════════════ RESET ══════════════
@@ -1506,6 +1609,8 @@ function resetAll() {
     document.querySelectorAll('.hdet').forEach(e => e.classList.remove('show'));
     ['kidsBox', 'kidsBoxW'].forEach(id => document.getElementById(id).innerHTML = '');
     legalTags = []; renderLegalTags();
+    childDiseases = {};
+    otherDiseasesList = []; renderOtherDiseaseTags();
     ['fl_photo', 'fl_doc'].forEach(id => {
         const el = document.getElementById(id);
         el.textContent = id === 'fl_photo' ? '📷 اختر صورة' : '📄 ارفق وثيقة';

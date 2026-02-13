@@ -873,8 +873,18 @@ async function viewRecord(id) {
                         if (c.specialization) cEduStr += ` - ${c.specialization}`;
                         if (c.university) cEduStr += ` (${c.university})`;
 
+                        let cHPStr = '—';
+                        if (c.healthStatus === 'healthy') cHPStr = 'سليم';
+                        else if (c.healthStatus === 'sick') {
+                            cHPStr = 'مريض';
+                            if (c.diseases && c.diseases.length) cHPStr += ` (${c.diseases.join('، ')})`;
+                        } else if (c.healthStatus === 'special') {
+                            cHPStr = 'ذوي احتياجات خاصة';
+                            if (c.healthDetails) cHPStr += ` (${c.healthDetails})`;
+                        }
+
                         html += `<div style="padding:6px 12px;margin:4px 0;background:var(--bg-input);border-radius:8px;font-size:0.88em;">
-                            <strong>${i+1}.</strong> ${esc(c.name) || '—'} | العمر: ${c.age || '—'} | التعليم: ${esc(cEduStr)} | المهنة: ${esc(c.job) || '—'}
+                            <strong>${i+1}.</strong> ${esc(c.name) || '—'} | العمر: ${c.age || '—'} | التعليم: ${esc(cEduStr)} | المهنة: ${esc(c.job) || '—'} | الصحة: ${esc(cHPStr)}
                         </div>`;
                     });
                 }
@@ -884,10 +894,25 @@ async function viewRecord(id) {
             try {
                 const children = JSON.parse(r.children_data_w);
                 if (children.length) {
-                    html += `<div style="margin-top:10px;font-weight:700;color:var(--accent);font-size:0.9em;">الأولاد (${children.length}):</div>`;
+                    html += `<div style="margin-top:10px;font-weight:700;color:var(--accent);font-size:0.9em;">الأولاد من زواج سابق (${children.length}):</div>`;
                     children.forEach((c, i) => {
+                        let cEduStr = c.education || '—';
+                        if (c.eduType) cEduStr += ` (${c.eduType})`;
+                        if (c.specialization) cEduStr += ` - ${c.specialization}`;
+                        if (c.university) cEduStr += ` (${c.university})`;
+
+                        let cHPStr = '—';
+                        if (c.healthStatus === 'healthy') cHPStr = 'سليم';
+                        else if (c.healthStatus === 'sick') {
+                            cHPStr = 'مريض';
+                            if (c.diseases && c.diseases.length) cHPStr += ` (${c.diseases.join('، ')})`;
+                        } else if (c.healthStatus === 'special') {
+                            cHPStr = 'ذوي احتياجات خاصة';
+                            if (c.healthDetails) cHPStr += ` (${c.healthDetails})`;
+                        }
+
                         html += `<div style="padding:6px 12px;margin:4px 0;background:var(--bg-input);border-radius:8px;font-size:0.88em;">
-                            <strong>${i+1}.</strong> ${c.name || '—'} | العمر: ${c.age || '—'} | التعليم: ${c.education || '—'}
+                            <strong>${i+1}.</strong> ${esc(c.name) || '—'} | العمر: ${c.age || '—'} | التعليم: ${esc(cEduStr)} | المهنة: ${esc(c.job) || '—'} | الصحة: ${esc(cHPStr)}
                         </div>`;
                     });
                 }
@@ -911,9 +936,20 @@ async function viewRecord(id) {
         let diseaseList = [];
         if (r.has_hypertension) diseaseList.push('ضغط');
         if (r.has_diabetes) diseaseList.push('سكري');
-        if (r.other_diseases) diseaseList.push(esc(r.other_diseases));
+        if (r.other_diseases) {
+            try {
+                const others = JSON.parse(r.other_diseases);
+                if (Array.isArray(others)) diseaseList.push(...others.map(esc));
+                else diseaseList.push(esc(r.other_diseases));
+            } catch(e) { diseaseList.push(esc(r.other_diseases)); }
+        }
 
         html += detailRow('أمراض مزمنة', diseaseList.length > 0 ? diseaseList.join('، ') : 'لا يوجد');
+        if (r.has_special_needs) {
+            html += detailRow('ذوي احتياجات خاصة', 'نعم');
+            html += detailRow('تفاصيل الاحتياجات', esc(r.special_needs_details));
+        }
+
         html += detailRow('التحصيل الدراسي', esc(r.education));
         if (r.education === 'ثانوية') html += detailRow('نوع الثانوية', esc(r.edu_type));
         if (['معهد', 'بكالوريوس', 'ماجستير', 'دكتوراه'].includes(r.education)) {
@@ -1054,8 +1090,8 @@ async function editRecord(id) {
                 <div class="filter-group">
                     <label>مسجل رسمياً</label>
                     <select name="isOfficiallyRegistered">
-                        <option value="0" ${!r.is_officially_registered?'selected':''}>لا</option>
-                        <option value="1" ${r.is_officially_registered?'selected':''}>نعم</option>
+                        <option value="no" ${!r.is_officially_registered?'selected':''}>لا</option>
+                        <option value="yes" ${r.is_officially_registered?'selected':''}>نعم</option>
                     </select>
                 </div>
             </div>
@@ -1093,16 +1129,36 @@ async function editRecord(id) {
                     <label>أمراض مزمنة</label>
                     <div style="display:flex; gap:10px; margin-top:8px;">
                         <label style="color:var(--text); font-size:0.85em; display:flex; align-items:center; gap:4px;">
-                            <input type="checkbox" name="hasHypertension" value="1" ${r.has_hypertension?'checked':''}> ضغط
+                            <input type="checkbox" name="hasHypertension" value="yes" ${r.has_hypertension?'checked':''}> ضغط
                         </label>
                         <label style="color:var(--text); font-size:0.85em; display:flex; align-items:center; gap:4px;">
-                            <input type="checkbox" name="hasDiabetes" value="1" ${r.has_diabetes?'checked':''}> سكري
+                            <input type="checkbox" name="hasDiabetes" value="yes" ${r.has_diabetes?'checked':''}> سكري
                         </label>
                     </div>
                 </div>
                 <div class="filter-group">
-                    <label>أمراض أخرى</label>
-                    <input name="otherDiseases" value="${esc(r.other_diseases||'')}">
+                    <label>أمراض أخرى (افصل بينهم بفاصلة)</label>
+                    <input name="otherDiseases" value="${(()=>{
+                        if(!r.other_diseases) return '';
+                        try {
+                            const o = JSON.parse(r.other_diseases);
+                            return Array.isArray(o) ? o.join(', ') : o;
+                        } catch(e) { return r.other_diseases; }
+                    })()}">
+                </div>
+            </div>
+            <div class="adv-grid">
+                <div class="filter-group">
+                    <label>ذوي احتياجات خاصة</label>
+                    <div style="display:flex; gap:10px; margin-top:8px;">
+                        <label style="color:var(--text); font-size:0.85em; display:flex; align-items:center; gap:4px;">
+                            <input type="checkbox" name="hasSpecialNeeds" value="yes" ${r.has_special_needs?'checked':''}> من ذوي الاحتياجات الخاصة
+                        </label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>تفاصيل الاحتياجات</label>
+                    <textarea name="specialNeedsDetails" rows="2" style="background:var(--bg-input); color:var(--text); border:2px solid var(--border); border-radius:12px; padding:10px;">${esc(r.special_needs_details||'')}</textarea>
                 </div>
             </div>
             <div class="adv-grid">
@@ -1166,9 +1222,17 @@ async function saveEdit(e) {
     const data = {};
     formData.forEach((value, key) => { data[key] = value; });
 
-    // Ensure checkboxes are included
-    if (!data.hasHypertension) data.hasHypertension = 0;
-    if (!data.hasDiabetes) data.hasDiabetes = 0;
+    // Ensure checkboxes are included as 'yes' or 'no'
+    data.hasHypertension = formData.get('hasHypertension') || 'no';
+    data.hasDiabetes = formData.get('hasDiabetes') || 'no';
+    data.hasSpecialNeeds = formData.get('hasSpecialNeeds') || 'no';
+
+    if (data.otherDiseases) {
+        const list = data.otherDiseases.split(',').map(s => s.trim()).filter(s => s);
+        data.otherDiseases = JSON.stringify(list);
+    } else {
+        data.otherDiseases = null;
+    }
 
     try {
         const res = await fetch('/api/records/' + currentRecordId, {

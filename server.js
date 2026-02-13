@@ -102,7 +102,9 @@ function initDbSchema() {
         { name: 'has_hypertension', type: 'INTEGER' },
         { name: 'has_diabetes', type: 'INTEGER' },
         { name: 'other_diseases', type: 'TEXT' },
-        { name: 'is_officially_registered', type: 'INTEGER' }
+        { name: 'is_officially_registered', type: 'INTEGER' },
+        { name: 'has_special_needs', type: 'INTEGER' },
+        { name: 'special_needs_details', type: 'TEXT' }
     ];
     for (const col of columnsToAdd) {
         try { db.exec(`ALTER TABLE records ADD COLUMN ${col.name} ${col.type}`); } catch (err) {}
@@ -179,7 +181,8 @@ function collectChildrenData(body, prefix) {
                 university: body[`cUniv_${prefix}_${i}`] || '',
                 job: body[`cJob_${prefix}_${i}`] || '',
                 healthStatus: body[`cHP_${prefix}_${i}`] || '',
-                healthDetails: body[`cHPD_${prefix}_${i}`] || ''
+                healthDetails: body[`cHPD_${prefix}_${i}`] || '',
+                diseases: body[`cDiseases_${prefix}_${i}`] ? JSON.parse(body[`cDiseases_${prefix}_${i}`]) : []
             });
         }
     }
@@ -222,7 +225,8 @@ app.post('/api/records', upload.fields([
                 profession, employer, breadwinner, chronic, diseases,
                 education, edu_type, edu_specialization, edu_university,
                 legal, legal_details, assoc, assoc_name, service_type, notes, breadwinner_job,
-                rent_amount, has_hypertension, has_diabetes, other_diseases, is_officially_registered
+                rent_amount, has_hypertension, has_diabetes, other_diseases, is_officially_registered,
+                has_special_needs, special_needs_details
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
@@ -230,7 +234,7 @@ app.post('/api/records', upload.fields([
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?
             )
         `);
 
@@ -251,7 +255,8 @@ app.post('/api/records', upload.fields([
             b.education || null, b.eduType || null, b.eduSpecialization || null, b.eduUniversity || null,
             b.legal || null, b.legal === 'yes' ? collectLegalData(b) : null, b.assoc || null, b.assocName || null,
             b.serviceType || null, b.notes || null, b.breadwinnerJob || null,
-            b.rentAmount || null, b.hasHypertension === 'yes' ? 1 : 0, b.hasDiabetes === 'yes' ? 1 : 0, b.otherDiseases || null, b.isOfficiallyRegistered === 'yes' ? 1 : 0
+            b.rentAmount || null, b.hasHypertension === 'yes' ? 1 : 0, b.hasDiabetes === 'yes' ? 1 : 0, b.otherDiseases || null, b.isOfficiallyRegistered === 'yes' ? 1 : 0,
+            b.hasSpecialNeeds === 'yes' ? 1 : 0, b.specialNeedsDetails || null
         );
         res.json({ success: true, id: result.lastInsertRowid });
     } catch (err) {
@@ -347,12 +352,22 @@ app.put('/api/records/:id', authMiddleware, upload.fields([{ name: 'photo' }, { 
             children_data:'children_data', children_data_w:'children_data_w',
             assoc:'assoc', assocName:'assoc_name', serviceType:'service_type', notes:'notes',
             rentAmount:'rent_amount', hasHypertension:'has_hypertension', hasDiabetes:'has_diabetes',
-            otherDiseases:'other_diseases', isOfficiallyRegistered:'is_officially_registered'
+            otherDiseases:'other_diseases', isOfficiallyRegistered:'is_officially_registered',
+            hasSpecialNeeds:'has_special_needs', specialNeedsDetails:'special_needs_details'
         };
 
         const sets = [];
         const vals = [];
+
+        // Handle checkboxes explicitly for PUT
+        const boolFields = ['hasHypertension', 'hasDiabetes', 'isOfficiallyRegistered', 'hasSpecialNeeds'];
+        boolFields.forEach(f => {
+            sets.push(`${map[f]} = ?`);
+            vals.push(b[f] === 'yes' ? 1 : 0);
+        });
+
         for (const [bk, col] of Object.entries(map)) {
+            if (boolFields.includes(bk)) continue; // Already handled
             if (b[bk] !== undefined) {
                 sets.push(`${col} = ?`);
                 const val = (b[bk] === 0 || b[bk] === '0') ? 0 : (b[bk] || null);
