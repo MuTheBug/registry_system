@@ -4,6 +4,7 @@ const multer = require('multer');
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const AdmZip = require('adm-zip');
 
 const PORT = process.env.PORT || 3000;
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
@@ -13,88 +14,91 @@ if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const db = new Database(DB_PATH);
+let db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 db.pragma('busy_timeout = 5000');
 
-db.exec(`
-    CREATE TABLE IF NOT EXISTS records (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        created_at TEXT DEFAULT (datetime('now','localtime')),
-        first_name TEXT NOT NULL,
-        father_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
-        gender TEXT NOT NULL,
-        mother_name TEXT NOT NULL,
-        birth_day INTEGER,
-        birth_month INTEGER,
-        birth_year INTEGER,
-        province TEXT NOT NULL,
-        national_id TEXT NOT NULL,
-        phone TEXT,
-        blood_type TEXT,
-        photo_path TEXT,
-        document_path TEXT,
-        arrest_day INTEGER,
-        arrest_month INTEGER,
-        arrest_year INTEGER,
-        arrest_place TEXT NOT NULL,
-        arrest_authority TEXT NOT NULL,
-        arrest_reason TEXT NOT NULL,
-        arrest_causer TEXT,
-        status TEXT,
-        release_day INTEGER,
-        release_month INTEGER,
-        release_year INTEGER,
-        death_day INTEGER,
-        death_month INTEGER,
-        death_year INTEGER,
-        marital TEXT,
-        guardian_name TEXT,
-        guardian_relation TEXT,
-        guardian_phone TEXT,
-        spouse_name TEXT,
-        spouse_phone TEXT,
-        has_kids TEXT,
-        kids_count INTEGER,
-        children_data TEXT,
-        ex_spouse_name TEXT,
-        has_kids_w TEXT,
-        kids_count_w INTEGER,
-        children_data_w TEXT,
-        address TEXT NOT NULL,
-        housing_type TEXT NOT NULL,
-        employment TEXT,
-        profession TEXT,
-        employer TEXT,
-        breadwinner TEXT,
-        breadwinner_job TEXT,
-        chronic TEXT,
-        diseases TEXT,
-        education TEXT,
-        edu_type TEXT,
-        edu_specialization TEXT,
-        edu_university TEXT,
-        kids_under_18_count INTEGER DEFAULT 0,
-        legal TEXT,
-        legal_details TEXT,
-        assoc TEXT,
-        assoc_name TEXT,
-        service_type TEXT,
-        notes TEXT
-    );
-`);
-
-const columnsToAdd = [
-    { name: 'edu_type', type: 'TEXT' },
-    { name: 'edu_specialization', type: 'TEXT' },
-    { name: 'edu_university', type: 'TEXT' },
-    { name: 'kids_under_18_count', type: 'INTEGER DEFAULT 0' },
-    { name: 'breadwinner_job', type: 'TEXT' }
-];
-for (const col of columnsToAdd) {
-    try { db.exec(`ALTER TABLE records ADD COLUMN ${col.name} ${col.type}`); } catch (err) {}
+function initDbSchema() {
+    db.exec(`
+        CREATE TABLE IF NOT EXISTS records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT DEFAULT (datetime('now','localtime')),
+            first_name TEXT NOT NULL,
+            father_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            gender TEXT NOT NULL,
+            mother_name TEXT NOT NULL,
+            birth_day INTEGER,
+            birth_month INTEGER,
+            birth_year INTEGER,
+            province TEXT NOT NULL,
+            national_id TEXT NOT NULL,
+            phone TEXT,
+            blood_type TEXT,
+            photo_path TEXT,
+            document_path TEXT,
+            arrest_day INTEGER,
+            arrest_month INTEGER,
+            arrest_year INTEGER,
+            arrest_place TEXT NOT NULL,
+            arrest_authority TEXT NOT NULL,
+            arrest_reason TEXT NOT NULL,
+            arrest_causer TEXT,
+            status TEXT,
+            release_day INTEGER,
+            release_month INTEGER,
+            release_year INTEGER,
+            death_day INTEGER,
+            death_month INTEGER,
+            death_year INTEGER,
+            marital TEXT,
+            guardian_name TEXT,
+            guardian_relation TEXT,
+            guardian_phone TEXT,
+            spouse_name TEXT,
+            spouse_phone TEXT,
+            has_kids TEXT,
+            kids_count INTEGER,
+            children_data TEXT,
+            ex_spouse_name TEXT,
+            has_kids_w TEXT,
+            kids_count_w INTEGER,
+            children_data_w TEXT,
+            address TEXT NOT NULL,
+            housing_type TEXT NOT NULL,
+            employment TEXT,
+            profession TEXT,
+            employer TEXT,
+            breadwinner TEXT,
+            breadwinner_job TEXT,
+            chronic TEXT,
+            diseases TEXT,
+            education TEXT,
+            edu_type TEXT,
+            edu_specialization TEXT,
+            edu_university TEXT,
+            kids_under_18_count INTEGER DEFAULT 0,
+            legal TEXT,
+            legal_details TEXT,
+            assoc TEXT,
+            assoc_name TEXT,
+            service_type TEXT,
+            notes TEXT
+        );
+    `);
+    const columnsToAdd = [
+        { name: 'edu_type', type: 'TEXT' },
+        { name: 'edu_specialization', type: 'TEXT' },
+        { name: 'edu_university', type: 'TEXT' },
+        { name: 'kids_under_18_count', type: 'INTEGER DEFAULT 0' },
+        { name: 'breadwinner_job', type: 'TEXT' },
+        { name: 'death_place', type: 'TEXT' }
+    ];
+    for (const col of columnsToAdd) {
+        try { db.exec(`ALTER TABLE records ADD COLUMN ${col.name} ${col.type}`); } catch (err) {}
+    }
 }
+initDbSchema();
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -200,7 +204,7 @@ app.post('/api/records', upload.fields([
                 arrest_day, arrest_month, arrest_year, arrest_place,
                 arrest_authority, arrest_reason, arrest_causer, status,
                 release_day, release_month, release_year,
-                death_day, death_month, death_year,
+                death_day, death_month, death_year, death_place,
                 marital, guardian_name, guardian_relation, guardian_phone,
                 spouse_name, spouse_phone, has_kids, kids_count, children_data,
                 ex_spouse_name, has_kids_w, kids_count_w, children_data_w,
@@ -214,7 +218,7 @@ app.post('/api/records', upload.fields([
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         `);
 
@@ -225,7 +229,7 @@ app.post('/api/records', upload.fields([
             b.arrestDay || null, b.arrestMonth || null, b.arrestYear || null, b.arrestPlace,
             b.arrestAuthority, b.arrestReason, b.arrestCauser || null, b.status || null,
             b.releaseDay || null, b.releaseMonth || null, b.releaseYear || null,
-            b.deathDay || null, b.deathMonth || null, b.deathYear || null,
+            b.deathDay || null, b.deathMonth || null, b.deathYear || null, b.deathPlace || null,
             b.marital || null, b.guardianName || null, b.guardianRelation || null, b.guardianPhone || null,
             b.spouseName || null, b.spousePhone || null, b.hasKids || null, b.kidsCount || null,
             c1 ? JSON.stringify(c1) : null, b.exSpouseName || null, b.hasKidsW || null,
@@ -274,6 +278,18 @@ app.get('/api/records', authMiddleware, (req, res) => {
         if (minKids) { where += ' AND (IFNULL(kids_count, 0) + IFNULL(kids_count_w, 0)) >= ?'; params.push(parseInt(minKids)); }
         if (minUnder18) { where += ' AND kids_under_18_count >= ?'; params.push(parseInt(minUnder18)); }
 
+        if (req.query.noDocs === 'true') {
+            where += ' AND (photo_path IS NULL OR photo_path = "") AND (document_path IS NULL OR document_path = "")';
+        }
+        if (req.query.diedInPlace) {
+            where += ' AND status = "deceased" AND death_place = ?';
+            params.push(req.query.diedInPlace);
+        }
+        if (req.query.survivedInPlace) {
+            where += ' AND status = "survivor" AND arrest_place = ?';
+            params.push(req.query.survivedInPlace);
+        }
+
         const total = db.prepare(`SELECT COUNT(*) as count FROM records ${where}`).get(...params).count;
         const records = db.prepare(`SELECT * FROM records ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
         res.json({ records, pagination: { page, limit, total, pages: Math.ceil(total / limit) } });
@@ -314,7 +330,8 @@ app.put('/api/records/:id', authMiddleware, upload.fields([{ name: 'photo' }, { 
             employer:'employer', breadwinner:'breadwinner', breadwinnerJob:'breadwinner_job',
             chronic:'chronic', diseases:'diseases',
             education:'education', eduType:'edu_type', eduSpecialization:'edu_specialization',
-            eduUniversity:'edu_university', legal:'legal',
+            eduUniversity:'edu_university', legal:'legal', legal_details:'legal_details', deathPlace:'death_place',
+            children_data:'children_data', children_data_w:'children_data_w',
             assoc:'assoc', assocName:'assoc_name', serviceType:'service_type', notes:'notes'
         };
 
@@ -366,11 +383,101 @@ app.get('/api/export', authMiddleware, (req, res) => {
     res.json(records);
 });
 
+app.get('/api/export/csv', authMiddleware, (req, res) => {
+    try {
+        const records = db.prepare('SELECT * FROM records ORDER BY id DESC').all();
+        if (records.length === 0) return res.send('');
+
+        const headers = Object.keys(records[0]);
+        let csv = '\ufeff' + headers.join(',') + '\n';
+
+        records.forEach(r => {
+            const row = headers.map(h => {
+                let val = r[h];
+                if (val === null || val === undefined) return '';
+                val = String(val).replace(/"/g, '""');
+                if (val.includes(',') || val.includes('\n') || val.includes('"')) {
+                    return `"${val}"`;
+                }
+                return val;
+            });
+            csv += row.join(',') + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename=registry_export.csv');
+        res.send(csv);
+    } catch (e) {
+        res.status(500).send(e.message);
+    }
+});
+
 app.get('/api/backup', authMiddleware, (req, res) => {
-    const backupName = `registry_backup_${Date.now()}.db`;
-    const backupPath = path.join(__dirname, backupName);
-    fs.copyFileSync(DB_PATH, backupPath);
-    res.download(backupPath, backupName, () => fs.unlinkSync(backupPath));
+    try {
+        db.pragma('wal_checkpoint(TRUNCATE)');
+        const backupName = `registry_backup_${Date.now()}.db`;
+        const backupPath = path.join(__dirname, backupName);
+        fs.copyFileSync(DB_PATH, backupPath);
+        res.download(backupPath, backupName, () => fs.unlinkSync(backupPath));
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/backup/full', authMiddleware, (req, res) => {
+    try {
+        db.pragma('wal_checkpoint(TRUNCATE)');
+        const zip = new AdmZip();
+        if (fs.existsSync(DB_PATH)) {
+            zip.addLocalFile(DB_PATH);
+        }
+        if (fs.existsSync(UPLOAD_DIR)) {
+            zip.addLocalFolder(UPLOAD_DIR, 'uploads');
+        }
+        const zipBuffer = zip.toBuffer();
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', 'attachment; filename=full_backup.zip');
+        res.send(zipBuffer);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/restore/full', authMiddleware, upload.single('backup'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    try {
+        const zip = new AdmZip(req.file.path);
+        const tempDir = path.join(__dirname, 'temp_restore');
+        if (fs.existsSync(tempDir)) fs.rmSync(tempDir, { recursive: true });
+        fs.mkdirSync(tempDir);
+        zip.extractAllTo(tempDir, true);
+
+        // Check if database exists in zip
+        const newDbPath = path.join(tempDir, 'registry.db');
+        const newUploadsDir = path.join(tempDir, 'uploads');
+
+        if (fs.existsSync(newDbPath)) {
+            db.close();
+            if (fs.existsSync(DB_PATH + '-wal')) fs.unlinkSync(DB_PATH + '-wal');
+            if (fs.existsSync(DB_PATH + '-shm')) fs.unlinkSync(DB_PATH + '-shm');
+            fs.copyFileSync(newDbPath, DB_PATH);
+            // Reopen db
+            db = new Database(DB_PATH);
+            db.pragma('journal_mode = WAL');
+            initDbSchema();
+        }
+
+        if (fs.existsSync(newUploadsDir)) {
+            if (fs.existsSync(UPLOAD_DIR)) fs.rmSync(UPLOAD_DIR, { recursive: true });
+            fs.renameSync(newUploadsDir, UPLOAD_DIR);
+        }
+
+        fs.rmSync(tempDir, { recursive: true });
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Server started on port ${PORT}`));

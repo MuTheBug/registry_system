@@ -836,7 +836,26 @@
                     <select name="arrestYear" required><option value="">السنة</option></select>
                 </div>
             </div>
-            <div class="fg"><label><span class="rq">*</span> مكان الاعتقال</label><input type="text" name="arrestPlace" placeholder="المكان بالتفصيل" required></div>
+            <div class="fg">
+                <label><span class="rq">*</span> مكان الاعتقال</label>
+                <select name="arrestPlace" onchange="toggleOther(this, 'otherArrestPlace')" required>
+                    <option value="">اختر المكان</option>
+                    <option value="صيدنايا الامني (الاحمر)">0 - صيدنايا الامني (الاحمر)</option>
+                    <option value="صيدنايا القضائي (الابيض)">01- صيدنايا القضائي (الابيض)</option>
+                    <option value="الفرع 235 فرع فلسطين">a - الفرع 235 فرع فلسطين</option>
+                    <option value="فرع 248، التحقيق العسكري">b- فرع 248، التحقيق العسكري</option>
+                    <option value="فرع 215، بسرية المداهمة والاقتحام">c- فرع 215، بسرية المداهمة والاقتحام</option>
+                    <option value="فرع 251، فرع الخطيب">d- فرع 251، فرع الخطيب</option>
+                    <option value="فرع 216، فرع الدوريات">e- فرع 216، فرع الدوريات</option>
+                    <option value="فرع 227، فرع المنطقة">f- فرع 227، فرع المنطقة</option>
+                    <option value="فرع 285، فرع التحقيق">g- فرع 285، فرع التحقيق</option>
+                    <option value="فرع 295، مكافحة الإرهاب">h- فرع 295، مكافحة الإرهاب</option>
+                    <option value="الدفاع الوطني">i- الدفاع الوطني</option>
+                    <option value="السجن المدني">j- السجن المدني</option>
+                    <option value="others">k- اخرى</option>
+                </select>
+                <input type="text" id="otherArrestPlace" placeholder="حدد المكان الآخر" style="display:none; margin-top:5px;">
+            </div>
         </div>
 
         <div class="g g2" style="margin-top:18px;">
@@ -892,6 +911,26 @@
                         <select name="deathMonth"><option value="">الشهر</option></select>
                         <select name="deathYear"><option value="">السنة</option></select>
                     </div>
+                </div>
+                <div class="fg">
+                    <label>مكان الوفاة</label>
+                    <select name="deathPlace" onchange="toggleOther(this, 'otherDeathPlace')">
+                        <option value="">اختر المكان</option>
+                        <option value="صيدنايا الامني (الاحمر)">0 - صيدنايا الامني (الاحمر)</option>
+                        <option value="صيدنايا القضائي (الابيض)">01- صيدنايا القضائي (الابيض)</option>
+                        <option value="الفرع 235 فرع فلسطين">a - الفرع 235 فرع فلسطين</option>
+                        <option value="فرع 248، التحقيق العسكري">b- فرع 248، التحقيق العسكري</option>
+                        <option value="فرع 215، بسرية المداهمة والاقتحام">c- فرع 215، بسرية المداهمة والاقتحام</option>
+                        <option value="فرع 251، فرع الخطيب">d- فرع 251، فرع الخطيب</option>
+                        <option value="فرع 216، فرع الدوريات">e- فرع 216، فرع الدوريات</option>
+                        <option value="فرع 227، فرع المنطقة">f- فرع 227، فرع المنطقة</option>
+                        <option value="فرع 285، فرع التحقيق">g- فرع 285، فرع التحقيق</option>
+                        <option value="فرع 295، مكافحة الإرهاب">h- فرع 295، مكافحة الإرهاب</option>
+                        <option value="الدفاع الوطني">i- الدفاع الوطني</option>
+                        <option value="السجن المدني">j- السجن المدني</option>
+                        <option value="others">k- اخرى</option>
+                    </select>
+                    <input type="text" id="otherDeathPlace" placeholder="حدد المكان الآخر" style="display:none; margin-top:5px;">
                 </div>
             </div>
         </div>
@@ -1334,6 +1373,16 @@ function toggleAssoc() {
 }
 
 // EDUCATION
+function toggleOther(el, targetId) {
+    const target = document.getElementById(targetId);
+    if (el.value === 'others') {
+        target.style.display = 'block';
+    } else {
+        target.style.display = 'none';
+        target.value = '';
+    }
+}
+
 function toggleEducation() {
     const v = document.querySelector('[name=education]').value;
     hide('sec_edu_secondary');
@@ -1466,6 +1515,16 @@ function showNotification(msg, type) {
 document.getElementById('mainForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
+    // Handle "others" for arrestPlace and deathPlace
+    if (this.arrestPlace.value === 'others') {
+        const otherVal = document.getElementById('otherArrestPlace').value;
+        if (!otherVal) { alert('يرجى تحديد مكان الاعتقال'); return; }
+    }
+    if (this.deathPlace && this.deathPlace.value === 'others') {
+        const otherVal = document.getElementById('otherDeathPlace').value;
+        if (!otherVal) { alert('يرجى تحديد مكان الوفاة'); return; }
+    }
+
     // Prepare dynamic legal problems for server
     const legalBox = document.getElementById('sec_legal');
     // Remove old ones
@@ -1488,6 +1547,12 @@ document.getElementById('mainForm').addEventListener('submit', async function(e)
 
     try {
         const fd = new FormData(this);
+        if (fd.get('arrestPlace') === 'others') {
+            fd.set('arrestPlace', document.getElementById('otherArrestPlace').value);
+        }
+        if (fd.get('deathPlace') === 'others') {
+            fd.set('deathPlace', document.getElementById('otherDeathPlace').value);
+        }
         // Add disease tags
         fd.set('diseases', tags.join('، '));
 

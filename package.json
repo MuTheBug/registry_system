@@ -8,6 +8,7 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "better-sqlite3": "^11.7.0",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.0",

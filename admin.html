@@ -545,12 +545,55 @@
                 </select>
             </div>
             <div class="filter-group">
-                <label>عدد الأولاد (كلي) \342\211\245</label>
+                <label>عدد الأولاد (كلي) ≥</label>
                 <input type="number" id="minKidsFilter" placeholder="أكبر من أو يساوي" min="0">
             </div>
             <div class="filter-group">
-                <label>عدد الأولاد (تحت 18) \342\211\245</label>
+                <label>عدد الأولاد (تحت 18) ≥</label>
                 <input type="number" id="minUnder18Filter" placeholder="أكبر من أو يساوي" min="0">
+            </div>
+            <div class="filter-group">
+                <label>بدون مستندات</label>
+                <select id="noDocsFilter">
+                    <option value="">الكل</option>
+                    <option value="true">نعم (بدون صورة أو وثيقة)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>توفي في مكان معين</label>
+                <select id="diedInPlaceFilter">
+                    <option value="">الكل</option>
+                    <option value="صيدنايا الامني (الاحمر)">صيدنايا الامني (الاحمر)</option>
+                    <option value="صيدنايا القضائي (الابيض)">صيدنايا القضائي (الابيض)</option>
+                    <option value="الفرع 235 فرع فلسطين">الفرع 235 فرع فلسطين</option>
+                    <option value="فرع 248، التحقيق العسكري">فرع 248، التحقيق العسكري</option>
+                    <option value="فرع 215، بسرية المداهمة والاقتحام">فرع 215، بسرية المداهمة والاقتحام</option>
+                    <option value="فرع 251، فرع الخطيب">فرع 251، فرع الخطيب</option>
+                    <option value="فرع 216، فرع الدوريات">فرع 216، فرع الدوريات</option>
+                    <option value="فرع 227، فرع المنطقة">فرع 227، فرع المنطقة</option>
+                    <option value="فرع 285، فرع التحقيق">فرع 285، فرع التحقيق</option>
+                    <option value="فرع 295، مكافحة الإرهاب">فرع 295، مكافحة الإرهاب</option>
+                    <option value="الدفاع الوطني">الدفاع الوطني</option>
+                    <option value="السجن المدني">السجن المدني</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>نجا من مكان معين</label>
+                <select id="survivedInPlaceFilter">
+                    <option value="">الكل</option>
+                    <option value="صيدنايا الامني (الاحمر)">صيدنايا الامني (الاحمر)</option>
+                    <option value="صيدنايا القضائي (الابيض)">صيدنايا القضائي (الابيض)</option>
+                    <option value="الفرع 235 فرع فلسطين">الفرع 235 فرع فلسطين</option>
+                    <option value="فرع 248، التحقيق العسكري">فرع 248، التحقيق العسكري</option>
+                    <option value="فرع 215، بسرية المداهمة والاقتحام">فرع 215، بسرية المداهمة والاقتحام</option>
+                    <option value="فرع 251، فرع الخطيب">فرع 251، فرع الخطيب</option>
+                    <option value="فرع 216، فرع الدوريات">فرع 216، فرع الدوريات</option>
+                    <option value="فرع 227، فرع المنطقة">فرع 227، فرع المنطقة</option>
+                    <option value="فرع 285، فرع التحقيق">فرع 285، فرع التحقيق</option>
+                    <option value="فرع 295، مكافحة الإرهاب">فرع 295، مكافحة الإرهاب</option>
+                    <option value="الدفاع الوطني">الدفاع الوطني</option>
+                    <option value="السجن المدني">السجن المدني</option>
+                </select>
             </div>
         </div>
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -563,6 +606,9 @@
     <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
         <button class="export-btn" onclick="exportJSON()">تصدير JSON</button>
         <button class="export-btn" onclick="exportCSV()" style="border-color:var(--accent);color:var(--accent);">تصدير CSV</button>
+        <button class="export-btn" onclick="exportFullBackup()" style="border-color:#27ae60;color:#27ae60;">تصدير نسخة كاملة (ZIP)</button>
+        <button class="export-btn" onclick="document.getElementById('importFile').click()" style="border-color:#2980b9;color:#2980b9;">استيراد نسخة كاملة (ZIP)</button>
+        <input type="file" id="importFile" style="display:none" onchange="importFullBackup(this)">
         <button class="print-btn" onclick="printTable()">طباعة الجدول</button>
     </div>
 
@@ -670,6 +716,13 @@ async function loadRecords(page) {
     if (hasPhoto) params.set('hasPhoto', hasPhoto);
     if (minKids) params.set('minKids', minKids);
     if (minUnder18) params.set('minUnder18', minUnder18);
+
+    const noDocs = document.getElementById('noDocsFilter').value;
+    const diedInPlace = document.getElementById('diedInPlaceFilter').value;
+    const survivedInPlace = document.getElementById('survivedInPlaceFilter').value;
+    if (noDocs) params.set('noDocs', noDocs);
+    if (diedInPlace) params.set('diedInPlace', diedInPlace);
+    if (survivedInPlace) params.set('survivedInPlace', survivedInPlace);
 
     try {
         const res = await fetch('/api/records?' + params);
@@ -967,7 +1020,27 @@ async function editRecord(id) {
                         <option value="deceased" ${r.status==='deceased'?'selected':''}>متوفى</option>
                     </select>
                 </div>
-                <div class="filter-group"><label>مكان الاعتقال</label><input name="arrestPlace" value="${esc(r.arrest_place)}"></div>
+                <div class="filter-group">
+                    <label>مكان الاعتقال</label>
+                    <input list="arrestPlaces" name="arrestPlace" value="${esc(r.arrest_place)}">
+                    <datalist id="arrestPlaces">
+                        <option value="صيدنايا الامني (الاحمر)">
+                        <option value="صيدنايا القضائي (الابيض)">
+                        <option value="الفرع 235 فرع فلسطين">
+                        <option value="فرع 248، التحقيق العسكري">
+                        <option value="فرع 215، بسرية المداهمة والاقتحام">
+                        <option value="فرع 251، فرع الخطيب">
+                        <option value="فرع 216، فرع الدوريات">
+                        <option value="فرع 227، فرع المنطقة">
+                        <option value="فرع 285، فرع التحقيق">
+                        <option value="فرع 295، مكافحة الإرهاب">
+                        <option value="الدفاع الوطني">
+                        <option value="السجن المدني">
+                    </datalist>
+                </div>
+                <div class="filter-group"><label>مكان الوفاة</label>
+                    <input list="arrestPlaces" name="deathPlace" value="${esc(r.death_place||'')}">
+                </div>
             </div>
 
             <div class="detail-section-title">العائلة والأولاد</div>
@@ -1100,6 +1173,9 @@ function resetFilters() {
     document.getElementById('hasPhotoFilter').value = '';
     document.getElementById('minKidsFilter').value = '';
     document.getElementById('minUnder18Filter').value = '';
+    document.getElementById('noDocsFilter').value = '';
+    document.getElementById('diedInPlaceFilter').value = '';
+    document.getElementById('survivedInPlaceFilter').value = '';
     currentPage = 1;
     loadRecords();
 }
@@ -1107,6 +1183,28 @@ function resetFilters() {
 // ══════════════ EXPORT ══════════════
 function exportJSON() { window.open('/api/export', '_blank'); }
 function exportCSV() { window.open('/api/export/csv', '_blank'); }
+function exportFullBackup() { window.open('/api/backup/full', '_blank'); }
+
+async function importFullBackup(input) {
+    if (!input.files || !input.files[0]) return;
+    if (!confirm('سيتم استبدال قاعدة البيانات والصور الحالية بالنسخة المرفوعة. هل أنت متأكد؟')) return;
+
+    const formData = new FormData();
+    formData.append('backup', input.files[0]);
+
+    try {
+        const res = await fetch('/api/restore/full', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.success) {
+            alert('تمت استعادة النسخة بنجاح. سيتم تحديث الصفحة.');
+            location.reload();
+        } else {
+            alert('خطأ: ' + (data.error || 'فشل الاستيراد'));
+        }
+    } catch (e) {
+        alert('حدث خطأ أثناء الاستيراد');
+    }
+}
 
 // ══════════════ BACKUP ══════════════
 function backupDB() {
