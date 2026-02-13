@@ -1088,7 +1088,7 @@
 </div>
 
 <!-- ═══════════ 6 - الصحة ═══════════ -->
-<div class="section glow-cyan">
+<div class="section glow-cyan" id="sec_health_section">
     <div class="sec-head">
         <span class="sec-num">6</span>
         <h3>الحالة الصحية</h3>
@@ -1330,20 +1330,24 @@ function toggleStatus() {
     else if (v === 'deceased') { show('sec_dead'); show('sec_official_registration'); }
     else if (v === 'enforced') { show('sec_official_registration'); }
 
-    // survivor: show employment, hide breadwinner
-    // enforced/deceased: hide employment, show breadwinner
+    // survivor: show employment, hide breadwinner, show health
+    // enforced/deceased: hide employment, show breadwinner, hide health
     const empSection = document.getElementById('sec_employment_only');
     const breadSection = document.getElementById('sec_breadwinner_only');
+    const healthSection = document.getElementById('sec_health_section');
 
     if (v === 'survivor') {
         empSection.style.display = 'block';
         breadSection.style.display = 'none';
+        healthSection.style.display = 'block';
     } else if (v === 'enforced' || v === 'deceased') {
         empSection.style.display = 'none';
         breadSection.style.display = 'block';
+        healthSection.style.display = 'none';
     } else {
         empSection.style.display = 'block';
         breadSection.style.display = 'block';
+        healthSection.style.display = 'block';
     }
 }
 
