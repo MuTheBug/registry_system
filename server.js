@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const Database = require('better-sqlite3');
 const path = require('path');
@@ -8,6 +9,7 @@ const fs = require('fs');
 // Configuration
 // ══════════════════════════════════════════════
 const PORT = process.env.PORT || 3000;
+const ADMIN_PASS = process.env.ADMIN_PASSWORD || 'admin123';
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const DB_PATH = path.join(__dirname, 'registry.db');
 
@@ -93,6 +95,10 @@ db.exec(`
 
         -- Section 7: Education & Legal
         education TEXT,
+        edu_type TEXT,
+        edu_specialization TEXT,
+        edu_university TEXT,
+        kids_under_18_count INTEGER DEFAULT 0,
         legal TEXT,
         legal_details TEXT,
 
@@ -110,6 +116,21 @@ db.exec(`
     CREATE INDEX IF NOT EXISTS idx_records_province ON records(province);
     CREATE INDEX IF NOT EXISTS idx_records_status ON records(status);
 `);
+
+// Migrations
+const tableInfo = db.prepare("PRAGMA table_info(records)").all();
+if (!tableInfo.find(c => c.name === 'edu_type')) {
+    db.exec("ALTER TABLE records ADD COLUMN edu_type TEXT");
+}
+if (!tableInfo.find(c => c.name === 'edu_specialization')) {
+    db.exec("ALTER TABLE records ADD COLUMN edu_specialization TEXT");
+}
+if (!tableInfo.find(c => c.name === 'edu_university')) {
+    db.exec("ALTER TABLE records ADD COLUMN edu_university TEXT");
+}
+if (!tableInfo.find(c => c.name === 'kids_under_18_count')) {
+    db.exec("ALTER TABLE records ADD COLUMN kids_under_18_count INTEGER DEFAULT 0");
+}
 
 // ══════════════════════════════════════════════
 // File Upload Configuration
@@ -151,16 +172,51 @@ const upload = multer({
 // ══════════════════════════════════════════════
 const app = express();
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Authentication Middleware
+const auth = (req, res, next) => {
+    if (req.cookies.AUTH_TOKEN === ADMIN_PASS) {
+        next();
+    } else {
+        if (req.xhr || req.path.startsWith('/api/')) {
+            res.status(401).json({ error: 'Unauthorized' });
+        } else {
+            res.redirect('/login.html');
+        }
+    }
+};
+
 // Serve static files
-app.use(express.static(__dirname));
-app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/login.html', express.static(path.join(__dirname, 'login.html')));
+app.use('/form.html', express.static(path.join(__dirname, 'form.html')));
+app.use('/logo.jpg', express.static(path.join(__dirname, 'logo.jpg')));
+app.use('/fonts', express.static(path.join(__dirname, 'fonts')));
+
+// Protect admin and uploads
+app.get('/admin.html', auth, (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.use('/uploads', auth, express.static(UPLOAD_DIR));
 
 // ══════════════════════════════════════════════
 // Routes
 // ══════════════════════════════════════════════
+
+// Authentication Routes
+app.post('/api/login', (req, res) => {
+    if (req.body.password === ADMIN_PASS) {
+        res.cookie('AUTH_TOKEN', ADMIN_PASS, { httpOnly: true });
+        res.json({ success: true });
+    } else {
+        res.status(401).json({ error: 'Invalid password' });
+    }
+});
+
+app.get('/logout', (req, res) => {
+    res.clearCookie('AUTH_TOKEN');
+    res.redirect('/login.html');
+});
 
 // Main form page
 app.get('/', (req, res) => {
@@ -168,7 +224,7 @@ app.get('/', (req, res) => {
 });
 
 // Admin dashboard
-app.get('/admin', (req, res) => {
+app.get('/admin', auth, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
@@ -181,6 +237,7 @@ app.post('/api/records', upload.fields([
     { name: 'photo', maxCount: 1 },
     { name: 'document', maxCount: 1 }
 ]), (req, res) => {
+    console.log('Received POST request to /api/records');
     try {
         const b = req.body;
         const photoPath = req.files?.photo?.[0]?.filename || null;
@@ -203,15 +260,17 @@ app.post('/api/records', upload.fields([
                 spouse_name, spouse_phone, has_kids, kids_count, children_data,
                 ex_spouse_name, has_kids_w, kids_count_w, children_data_w,
                 address, housing_type, employment, profession, employer,
-                breadwinner, chronic, diseases, education, legal,
-                legal_details, assoc, assoc_name, service_type, notes
+                breadwinner, chronic, diseases, education,
+                edu_type, edu_specialization, edu_university,
+                kids_under_18_count,
+                legal, legal_details, assoc, assoc_name, service_type, notes
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
         `);
 
@@ -236,7 +295,10 @@ app.post('/api/records', upload.fields([
             b.address, b.housingType,
             b.employment || null, b.profession || null, b.employer || null,
             b.breadwinner || null, b.chronic || null, b.diseases || null,
-            b.education || null, b.legal || null, b.legalDetails || null,
+            b.education || null,
+            b.edu_type || null, b.edu_specialization || null, b.edu_university || null,
+            (childrenData ? childrenData.filter(c => parseInt(c.age) < 18).length : 0) + (childrenDataW ? childrenDataW.filter(c => parseInt(c.age) < 18).length : 0),
+            b.legal || null, b.legalDetails || null,
             b.assoc || null, b.assocName || null, b.serviceType || null,
             b.notes || null
         );
@@ -249,7 +311,7 @@ app.post('/api/records', upload.fields([
 });
 
 // Get all records (with pagination and search)
-app.get('/api/records', (req, res) => {
+app.get('/api/records', auth, (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
@@ -286,6 +348,8 @@ app.get('/api/records', (req, res) => {
         const arrestYearFrom = req.query.arrestYearFrom || '';
         const arrestYearTo = req.query.arrestYearTo || '';
         const hasPhoto = req.query.hasPhoto || '';
+        const kidsCount = req.query.kidsCount || '';
+        const kidsUnder18 = req.query.kidsUnder18 || '';
 
         if (gender) { where += ' AND gender = ?'; params.push(gender); }
         if (marital) { where += ' AND marital = ?'; params.push(marital); }
@@ -296,6 +360,8 @@ app.get('/api/records', (req, res) => {
         if (arrestYearTo) { where += ' AND arrest_year <= ?'; params.push(parseInt(arrestYearTo)); }
         if (hasPhoto === 'yes') { where += ' AND photo_path IS NOT NULL'; }
         if (hasPhoto === 'no') { where += ' AND photo_path IS NULL'; }
+        if (kidsCount) { where += ' AND kids_count >= ?'; params.push(parseInt(kidsCount)); }
+        if (kidsUnder18) { where += ' AND kids_under_18_count >= ?'; params.push(parseInt(kidsUnder18)); }
 
         const total = db.prepare(`SELECT COUNT(*) as count FROM records ${where}`).get(...params).count;
         const records = db.prepare(`SELECT * FROM records ${where} ORDER BY id DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
@@ -316,7 +382,7 @@ app.get('/api/records', (req, res) => {
 });
 
 // Get a single record by ID
-app.get('/api/records/:id', (req, res) => {
+app.get('/api/records/:id', auth, (req, res) => {
     try {
         const record = db.prepare('SELECT * FROM records WHERE id = ?').get(req.params.id);
         if (!record) return res.status(404).json({ error: 'Record not found' });
@@ -326,8 +392,31 @@ app.get('/api/records/:id', (req, res) => {
     }
 });
 
+// Update a record
+app.put('/api/records/:id', auth, (req, res) => {
+    try {
+        const b = req.body;
+        const id = req.params.id;
+
+        // For simplicity in this edit, we only update a subset of fields
+        // In a real app, you'd handle all fields.
+        const stmt = db.prepare(`
+            UPDATE records SET
+                first_name = ?, father_name = ?, last_name = ?,
+                province = ?, national_id = ?, phone = ?
+            WHERE id = ?
+        `);
+
+        stmt.run(b.first_name, b.father_name, b.last_name, b.province, b.national_id, b.phone, id);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error updating record:', err);
+        res.status(500).json({ error: 'Failed to update record' });
+    }
+});
+
 // Delete a record
-app.delete('/api/records/:id', (req, res) => {
+app.delete('/api/records/:id', auth, (req, res) => {
     try {
         const record = db.prepare('SELECT photo_path, document_path FROM records WHERE id = ?').get(req.params.id);
         if (!record) return res.status(404).json({ error: 'Record not found' });
@@ -350,7 +439,7 @@ app.delete('/api/records/:id', (req, res) => {
 });
 
 // Export all records as JSON
-app.get('/api/export', (req, res) => {
+app.get('/api/export', auth, (req, res) => {
     try {
         const records = db.prepare('SELECT * FROM records ORDER BY id DESC').all();
         res.setHeader('Content-Disposition', 'attachment; filename="registry_export.json"');
@@ -361,7 +450,7 @@ app.get('/api/export', (req, res) => {
 });
 
 // Stats endpoint
-app.get('/api/stats', (req, res) => {
+app.get('/api/stats', auth, (req, res) => {
     try {
         const total = db.prepare('SELECT COUNT(*) as count FROM records').get().count;
         const enforced = db.prepare("SELECT COUNT(*) as count FROM records WHERE status = 'enforced'").get().count;
@@ -375,7 +464,7 @@ app.get('/api/stats', (req, res) => {
 });
 
 // Database backup endpoint
-app.get('/api/backup', (req, res) => {
+app.get('/api/backup', auth, (req, res) => {
     try {
         // Checkpoint WAL to ensure all data is in the main DB file
         db.pragma('wal_checkpoint(TRUNCATE)');
@@ -400,7 +489,7 @@ app.get('/api/backup', (req, res) => {
 });
 
 // Export as CSV
-app.get('/api/export/csv', (req, res) => {
+app.get('/api/export/csv', auth, (req, res) => {
     try {
         const records = db.prepare('SELECT * FROM records ORDER BY id DESC').all();
         const headers = [
@@ -433,7 +522,7 @@ app.get('/api/export/csv', (req, res) => {
 });
 
 // Province stats for reports
-app.get('/api/stats/provinces', (req, res) => {
+app.get('/api/stats/provinces', auth, (req, res) => {
     try {
         const rows = db.prepare('SELECT province, COUNT(*) as count FROM records GROUP BY province ORDER BY count DESC').all();
         res.json(rows);
@@ -443,7 +532,7 @@ app.get('/api/stats/provinces', (req, res) => {
 });
 
 // Gender stats
-app.get('/api/stats/gender', (req, res) => {
+app.get('/api/stats/gender', auth, (req, res) => {
     try {
         const rows = db.prepare('SELECT gender, COUNT(*) as count FROM records GROUP BY gender').all();
         res.json(rows);

@@ -540,6 +540,14 @@
                     <option value="no">بدون صورة</option>
                 </select>
             </div>
+            <div class="filter-group fg-narrow">
+                <label>عدد الأطفال (أكبر من)</label>
+                <input type="number" id="kidsCountFilter" placeholder="0" min="0">
+            </div>
+            <div class="filter-group fg-narrow">
+                <label>أطفال تحت 18 (أكبر من)</label>
+                <input type="number" id="kidsUnder18Filter" placeholder="0" min="0">
+            </div>
         </div>
         <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
             <button class="filter-btn" onclick="loadRecords()">تطبيق التصفية</button>
@@ -586,11 +594,51 @@
         <div class="modal-head">
             <h2 id="modalTitle">تفاصيل السجل</h2>
             <div class="modal-head-actions">
+                <button class="modal-print-btn" id="modalEditBtn" style="background:var(--amber-glow); border-color:var(--amber); color:var(--amber); display:none;">تعديل</button>
                 <button class="modal-print-btn" onclick="printRecord()">طباعة</button>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
         </div>
         <div class="modal-body" id="modalBody"></div>
+        <div class="modal-body" id="editFormContainer" style="display:none;">
+            <form id="editForm">
+                <div class="adv-grid">
+                    <div class="filter-group">
+                        <label>الاسم الأول</label>
+                        <input type="text" name="first_name" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>الكنية</label>
+                        <input type="text" name="last_name" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>اسم الأب</label>
+                        <input type="text" name="father_name" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>المحافظة</label>
+                        <select name="province" required>
+                            <option>دمشق</option><option>ريف دمشق</option><option>حلب</option><option>حمص</option>
+                            <option>حماة</option><option>اللاذقية</option><option>طرطوس</option><option>إدلب</option>
+                            <option>دير الزور</option><option>الرقة</option><option>الحسكة</option><option>درعا</option>
+                            <option>السويداء</option><option>القنيطرة</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>الرقم الوطني</label>
+                        <input type="text" name="national_id" required>
+                    </div>
+                    <div class="filter-group">
+                        <label>رقم الهاتف</label>
+                        <input type="text" name="phone">
+                    </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <button type="submit" class="filter-btn">حفظ التغييرات</button>
+                    <button type="button" class="reset-btn" onclick="cancelEdit()">إلغاء</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -638,6 +686,8 @@ async function loadRecords(page) {
     const arrestYearFrom = document.getElementById('arrestYearFrom').value;
     const arrestYearTo = document.getElementById('arrestYearTo').value;
     const hasPhoto = document.getElementById('hasPhotoFilter').value;
+    const kidsCount = document.getElementById('kidsCountFilter').value;
+    const kidsUnder18 = document.getElementById('kidsUnder18Filter').value;
 
     if (gender) params.set('gender', gender);
     if (marital) params.set('marital', marital);
@@ -647,6 +697,8 @@ async function loadRecords(page) {
     if (arrestYearFrom) params.set('arrestYearFrom', arrestYearFrom);
     if (arrestYearTo) params.set('arrestYearTo', arrestYearTo);
     if (hasPhoto) params.set('hasPhoto', hasPhoto);
+    if (kidsCount) params.set('kidsCount', kidsCount);
+    if (kidsUnder18) params.set('kidsUnder18', kidsUnder18);
 
     try {
         const res = await fetch('/api/records?' + params);
@@ -735,6 +787,15 @@ async function viewRecord(id) {
         const res = await fetch('/api/records/' + id);
         const r = await res.json();
         currentRecordId = id;
+
+        // Show Edit button and set its action
+        const editBtn = document.getElementById('modalEditBtn');
+        editBtn.style.display = 'block';
+        editBtn.onclick = () => startEdit(r);
+
+        // Reset display
+        document.getElementById('modalBody').style.display = 'block';
+        document.getElementById('editFormContainer').style.display = 'none';
         document.getElementById('modalTitle').textContent = `سجل #${r.id} — ${r.first_name} ${r.last_name}`;
 
         let html = '';
@@ -871,8 +932,53 @@ async function viewRecord(id) {
 // ══════════════ MODAL / LIGHTBOX ══════════════
 function closeModal() {
     document.getElementById('detailModal').classList.remove('show');
+    document.getElementById('modalBody').style.display = 'block';
+    document.getElementById('editFormContainer').style.display = 'none';
     currentRecordId = null;
 }
+
+function startEdit(r) {
+    document.getElementById('modalBody').style.display = 'none';
+    document.getElementById('editFormContainer').style.display = 'block';
+    document.getElementById('modalEditBtn').style.display = 'none';
+
+    const form = document.getElementById('editForm');
+    form.first_name.value = r.first_name;
+    form.last_name.value = r.last_name;
+    form.father_name.value = r.father_name;
+    form.province.value = r.province;
+    form.national_id.value = r.national_id;
+    form.phone.value = r.phone || '';
+}
+
+function cancelEdit() {
+    document.getElementById('modalBody').style.display = 'block';
+    document.getElementById('editFormContainer').style.display = 'none';
+    document.getElementById('modalEditBtn').style.display = 'block';
+}
+
+document.getElementById('editForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+
+    try {
+        const res = await fetch('/api/records/' + currentRecordId, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (res.ok) {
+            alert('تم تحديث السجل بنجاح');
+            loadRecords();
+            closeModal();
+        } else {
+            alert('فشل تحديث السجل');
+        }
+    } catch (e) {
+        alert('خطأ في الاتصال');
+    }
+};
 
 function openLightbox(src) {
     document.getElementById('lightboxImg').src = src;
