@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - لوحة الإدارة</title>
-    <link rel="stylesheet" href="/fonts/fonts.css">
+    <title>تسجيل الدخول - جمعية حقنا</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
         body {
             font-family: 'Tajawal', sans-serif;
             background: #0a0e17;
@@ -17,23 +17,23 @@
             margin: 0;
         }
         .login-card {
-            background: #151c2c;
+            background: #111827;
             padding: 40px;
             border-radius: 20px;
             border: 1px solid #1e2a42;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
         }
-        h2 { text-align: center; margin-bottom: 30px; color: #06b6d4; }
-        .fg { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        label { font-size: 0.9em; color: #94a3b8; }
+        h1 { color: #06b6d4; margin-bottom: 30px; }
         input {
+            width: 100%;
             padding: 12px;
+            margin-bottom: 20px;
             background: #0d1320;
             border: 2px solid #1e2a42;
             border-radius: 10px;
-            color: #fff;
+            color: white;
             font-size: 1em;
             outline: none;
         }
@@ -44,29 +44,25 @@
             background: linear-gradient(135deg, #06b6d4, #8b5cf6);
             border: none;
             border-radius: 10px;
-            color: #fff;
-            font-weight: 700;
+            color: white;
+            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
+            font-size: 1em;
         }
-        button:hover { transform: translateY(-2px); }
-        .error { color: #ef4444; font-size: 0.9em; margin-top: 10px; text-align: center; display: none; }
+        .error { color: #ef4444; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
     <div class="login-card">
-        <h2>لوحة إدارة حقنا</h2>
+        <h1>دخول الإدارة</h1>
         <form id="loginForm">
-            <div class="fg">
-                <label>كلمة مرور المسؤول</label>
-                <input type="password" id="password" required placeholder="أدخل كلمة المرور">
-            </div>
+            <input type="password" id="password" placeholder="كلمة المرور" required>
             <button type="submit">دخول</button>
-            <div class="error" id="errorMsg">كلمة المرور غير صحيحة</div>
+            <div id="error" class="error">كلمة المرور غير صحيحة</div>
         </form>
     </div>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').onsubmit = async (e) => {
             e.preventDefault();
             const password = document.getElementById('password').value;
             const res = await fetch('/api/login', {
@@ -77,9 +73,9 @@
             if (res.ok) {
                 window.location.href = '/admin';
             } else {
-                document.getElementById('errorMsg').style.display = 'block';
+                document.getElementById('error').style.display = 'block';
             }
-        });
+        };
     </script>
 </body>
 </html>
